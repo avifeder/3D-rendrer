@@ -12,16 +12,33 @@ import primitives.Vector;
  */
 public class Sphere extends RadialGeometry {
 
+    Point3D _center;
     /**
      * contractor - gets double radius
      * @param radius of the Sphere
      */
-    public Sphere(double radius) {
+    public Sphere(double radius, Point3D p) {
         super(radius);
+        _center = p;
+    }
+
+    public Point3D get_center() {
+        return _center;
+    }
+
+    @Override
+    public String toString() {
+        return "Sphere{" +" Radius =" + _radius +
+                " , center=" + _center +
+                '}';
     }
 
     @Override
     public Vector getNormal(Point3D point) {
-        return null;
+        try {
+            return point.subtract(_center).normalize();
+        }
+        catch (Exception e){
+            return null;}
     }
 }

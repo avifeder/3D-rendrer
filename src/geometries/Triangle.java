@@ -8,7 +8,9 @@ public class Triangle extends Polygon {
      * Polygon constructor based on vertices list. The list must be ordered by edge
      * path. The polygon must be convex.
      *
-     * @param vertices list of vertices according to their order by edge path
+     * @param point1 vertices according to their order by edge path
+     * @param point2 vertices according to their order by edge path
+     * @param point3 vertices according to their order by edge path
      * @throws IllegalArgumentException in any case of illegal combination of
      *                                  vertices:
      *                                  <ul>
