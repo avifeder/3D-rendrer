@@ -43,6 +43,8 @@ public class Triangle extends Polygon {
         Vector v1 = this._vertices.get(0).subtract(ray.get_point());
         Vector v2 = this._vertices.get(1).subtract(ray.get_point());
         Vector v3 = this._vertices.get(2).subtract(ray.get_point());
+        if(v1.isParallel(v2) || v2.isParallel(v3) || v3.isParallel(v1))
+            return null;
         Vector N1 = v1.crossProduct(v2).normalize();
         Vector N2 = v2.crossProduct(v3).normalize();
         Vector N3 = v3.crossProduct(v1).normalize();

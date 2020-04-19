@@ -178,4 +178,14 @@ public class Vector {
     public int hashCode() {
         return Objects.hash(getPoint());
     }
+    public boolean isParallel(Vector vector2)
+    {
+        Coordinate x = new Coordinate(_point.get_y().get() * vector2._point.get_z().get() - _point.get_z().get() * vector2._point.get_y().get());
+        Coordinate y = new Coordinate(_point.get_z().get() * vector2._point.get_x().get() - _point.get_x().get() * vector2._point.get_z().get());
+        Coordinate z = new Coordinate(_point.get_x().get() * vector2._point.get_y().get() - _point.get_y().get() * vector2._point.get_x().get());
+        Point3D point = new Point3D(x, y, z);
+        if (point.equals(Point3D.ZERO))
+            return true;
+        return false;
+    }
 }
