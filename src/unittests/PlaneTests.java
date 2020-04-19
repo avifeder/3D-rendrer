@@ -3,8 +3,9 @@ package unittests;
 import geometries.Plane;
 import geometries.Triangle;
 import org.junit.Test;
-import primitives.Point3D;
-import primitives.Vector;
+import primitives.*;
+
+import java.util.List;
 
 import static org.junit.Assert.*;
 /**
@@ -27,5 +28,59 @@ public class PlaneTests {
             assertEquals("Bad normal to plane",v1.crossProduct(v2).normalize(),pl1.getNormal(new Point3D(-2, 1, 0)));
         }
         catch (Exception e){}
+    }
+    /**
+     * Test method for {@link geometries.Plane#findIntersections(Ray)}
+     */
+    @Test
+    public void findIntersections() throws Exception {
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Ray's line is intersects the plane (1 points)
+        Plane plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        Ray ray = new Ray(new Point3D(0,0,1), new Vector(1,0,-1));
+        assertEquals("Bad intersects to plane - line is intersects the plane", List.of(new Point3D(1,0,0)) ,plane.findIntersections(ray));
+        // TC02: Ray's line does not intersect the plane (0 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(2,0,0), new Vector(1,0,1));
+        assertEquals("Bad intersects to plane - line does not intersect the plane", null ,plane.findIntersections(ray));
+
+        // =============== Boundary Values Tests ==================
+
+        // **** Group: Ray is parallel to the plane
+        // TC03: Ray is parallel to the plane and included in the plane (0 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(1,0,1), new Vector(0,0,1));
+        assertEquals("Bad intersects to plane - Ray is parallel to the plane and included in the plane", null ,plane.findIntersections(ray));
+        // TC04: Ray is parallel to the plane and not included in the plane (0 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(2,0,0), new Vector(0,0,1));
+        assertEquals("Bad intersects to plane - Ray is parallel to the plane and not included in the plane", null ,plane.findIntersections(ray));
+
+        // **** Group: Ray is orthogonal to the plane
+        // TC05:  Ray is orthogonal to the plane and 𝑃0 before the plane (1 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(-1,0,0), new Vector(1,0,0));
+        assertEquals("Bad intersects to plane - Ray is orthogonal to the plane and p0 before the plane", List.of(new Point3D(1,0,0)) ,plane.findIntersections(ray));
+        // TC06:  Ray is orthogonal to the plane and 𝑃0  in the plane (0 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(1,0,0), new Vector(1,0,0));
+        assertEquals("Bad intersects to plane - Ray is orthogonal to the plane and p0 in the plane", null ,plane.findIntersections(ray));
+        // TC07:  Ray is orthogonal to the plane and 𝑃0 after the plane (0 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(2,0,0), new Vector(1,0,0));
+        assertEquals("Bad intersects to plane - Ray is orthogonal to the plane and p0 after the plane", null ,plane.findIntersections(ray));
+
+        // **** Group: Special cases
+        // TC08: Ray is neither orthogonal nor parallel to and begins at the plane (0 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(1,0,1), new Vector(1,0,1));
+        assertEquals("Bad intersects to plane - Ray is neither orthogonal nor parallel to and begins at the plane", null ,plane.findIntersections(ray));
+        // TC09: Ray is neither orthogonal nor parallel to the plane and begins in the same point which appears as reference point in the plane (0 points)
+        plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
+        ray = new Ray(new Point3D(1,0,0), new Vector(1,0,1));
+        assertEquals("Bad intersects to plane - Ray is neither orthogonal nor parallel to the plane and begins in the same point which appears as reference point in the plane", null ,plane.findIntersections(ray));
+
+
     }
 }

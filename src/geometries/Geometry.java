@@ -7,7 +7,7 @@ import primitives.*;
  * Geometry interface represents normal in geometry shapes
  * @author avi && daniel
  */
-public interface Geometry {
+public interface Geometry extends Intersectable {
     /**
      * @param point Point3D
      * @return Vector - the normal vector

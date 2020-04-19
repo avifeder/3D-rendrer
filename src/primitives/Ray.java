@@ -3,6 +3,8 @@ package primitives;
 
 import java.util.Objects;
 
+import static primitives.Util.isZero;
+
 /**
  * Ray class
  * represents Ray with point and vector
@@ -65,5 +67,11 @@ public class Ray {
     @Override
     public int hashCode() {
         return Objects.hash(get_point(), get_vector());
+    }
+    public Point3D getPoint(double t) throws Exception
+    {
+        if(isZero(t))
+            return this.get_point();
+        return this.get_point().add(this.get_vector().scale(t));
     }
 }
