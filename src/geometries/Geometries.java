@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import static primitives.Util.isZero;
+
 public class Geometries implements Intersectable  {
     private List<Intersectable> GeometriesList;
     public Geometries()
@@ -30,7 +32,8 @@ public class Geometries implements Intersectable  {
     {
         Point3D point = (Point3D)object;
         for (Point3D point1 : list) {
-            if(point.equals(point1))
+            if(isZero(point.get_x().get() - point1.get_x().get()) && isZero(point.get_y().get() - point1.get_y().get())
+            && isZero(point.get_z().get() - point1.get_z().get()))
                 return true;
         }
         return false;

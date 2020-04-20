@@ -10,6 +10,8 @@ import org.junit.Test;
 import geometries.*;
 import primitives.*;
 
+import java.util.List;
+
 /**
  * Testing Polygons
  * @author Dan
@@ -94,5 +96,44 @@ public class PolygonTests {
         }
         catch (Exception e){}
     }
+    /**
+     * Test method for {@link geometries.Polygon#findIntersections(Ray)}
+     */
+    @Test
+    public void findIntersections() throws Exception {
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Ray's line is Inside polygon (1 points)
+        Polygon polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
+        Ray ray = new Ray(new Point3D(0,0.5,-1), new Vector(0,0,1));
+        assertEquals("Bad intersects to polygon - line is Inside polygon", List.of(new Point3D(0,0.5,0)) ,polygon.findIntersections(ray));
+        // TC01: Ray's line is Outside against edge (0 points)
+        polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
+        ray = new Ray(new Point3D(2,0.5,-1), new Vector(0,0,1));
+        assertEquals("Bad intersects to polygon - line is Outside against edge", null ,polygon.findIntersections(ray));
+        // TC01:  Ray's line is Outside against vertex (0 points)
+        polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
+        ray = new Ray(new Point3D(0,2,-1), new Vector(0,0,1));
+        assertEquals("Bad intersects to polygon - line is Outside against vertex", null ,polygon.findIntersections(ray));
+
+        // =============== Boundary Values Tests ==================
+
+        // TC01: Ray's line is On edge (0 points)
+        polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
+        ray = new Ray(new Point3D(0.5,0,-1), new Vector(0,0,1));
+        assertEquals("Bad intersects to polygon - line is On edge", null ,polygon.findIntersections(ray));
+        // TC01: Ray's line is In vertex (0 points)
+        polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
+        ray = new Ray(new Point3D(0,1,-1), new Vector(0,0,1));
+        assertEquals("Bad intersects to polygon - line is In vertex", null ,polygon.findIntersections(ray));
+        // TC01: Ray's line is On edge's continuation (0 points)
+        polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
+        ray = new Ray(new Point3D(2,0,-1), new Vector(0,0,1));
+        assertEquals("Bad intersects to polygon - line is On edge's continuation", null ,polygon.findIntersections(ray));
+
+
+    }
+
 
 }

@@ -1,6 +1,7 @@
 //Daniel Yochanan 322406232 && Avi Feder 208199638
 package geometries;
 
+import java.util.ArrayList;
 import java.util.List;
 import primitives.*;
 import static primitives.Util.*;
@@ -109,6 +110,42 @@ catch (Exception e)
 
     @Override
     public List<Point3D> findIntersections(Ray ray) throws Exception{
+        for (int i = 0; i < _vertices.size(); ++i){
+            if(ray.get_point().equals(this._vertices.get(i)))
+                return null;
+        }
+        Vector [] v1ToVn = new Vector[this._vertices.size()];
+        for (int i = 0; i < _vertices.size(); ++i) {
+        v1ToVn[i] = this._vertices.get(i).subtract(ray.get_point());
+        }
+        for (int i = 0; i < v1ToVn.length; ++i){
+            if(v1ToVn[i].isParallel(v1ToVn[(i + 1) % v1ToVn.length]))
+                return null;
+        }
+        Vector [] N1ToNn = new Vector[this._vertices.size()];
+        for (int i = 0; i < _vertices.size(); ++i) {
+            N1ToNn[i] = v1ToVn[i].crossProduct(v1ToVn[(i + 1) % v1ToVn.length]).normalize();
+        }
+        double [] vn1ToVNn = new double[this._vertices.size()];
+        for (int i = 0; i < _vertices.size(); ++i) {
+            vn1ToVNn[i] = ray.get_vector().dotProduct(N1ToNn[i]);
+        }
+        for (int i = 0; i < _vertices.size(); ++i){
+            if(isZero(vn1ToVNn[i]))
+                return null;
+        }
+        boolean isAllPositive = true,
+        isAllNegative = true;
+        for (int i = 0; i < _vertices.size(); ++i){
+            if(vn1ToVNn[i] < 0 && isAllPositive)
+                isAllPositive = false;
+        }
+        for (int i = 0; i < _vertices.size(); ++i){
+            if(vn1ToVNn[i] > 0 && isAllNegative)
+                isAllNegative = false;
+        }
+        if(isAllNegative || isAllPositive)
+            return this._plane.findIntersections(ray);
         return null;
     }
 }
