@@ -51,6 +51,6 @@ public class RenderTests {
      */
     @Test
     public void xmlRenderTwoColorTest() throws Exception {
-        xmlToScene.convertXmlToScene("C:\\Users\\Liron\\IdeaProjects\\JavaProject\\basicRenderTestTwoColors.xml");
+        xmlToScene.convertXmlToScene(System.getProperty("user.dir")+"\\basicRenderTestTwoColors.xml");
     }
 }

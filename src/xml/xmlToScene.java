@@ -1,13 +1,13 @@
 package xml;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import elements.AmbientLight;
 import elements.Camera;
-import geometries.Geometries;
-import geometries.Sphere;
-import geometries.Triangle;
+import geometries.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -19,9 +19,19 @@ import renderer.ImageWriter;
 import renderer.Render;
 import scene.Scene;
 
+import static java.lang.System.out;
+
 public class xmlToScene {
 
-    public static void convertXmlToScene(String path) {
+    public static void main(String[] args) {
+        try {
+            File file = new File(System.getProperty("user.dir")+"\\basicRenderTestTwoColors.xml");
+            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document doc = dBuilder.parse(file);
+            out.print(doc.getDocumentElement().getElementsByTagName("geometries").item(0).getChildNodes().item(3).getAttributes().item(5).getNodeValue());
+        }catch (Exception e){}
+    }
+        public static void convertXmlToScene(String path) {
 
             try {
                 File file = new File(path);
@@ -65,6 +75,30 @@ public class xmlToScene {
                         Sphere sphere = new Sphere(radius, center);
                         geometries.add(sphere);
                     }
+                    else if (name == "plane") {
+                        point = node.getAttributes().item(0).getNodeValue().split(" ");
+                        Vector normal = new Vector(Double.parseDouble(point[0]), Double.parseDouble(point[1]), Double.parseDouble(point[2]));
+                        point = node.getAttributes().item(1).getNodeValue().split(" ");
+                        p0 = new Point3D(Double.parseDouble(point[0]), Double.parseDouble(point[1]), Double.parseDouble(point[2]));
+                        Plane plane = new Plane(p0, normal);
+                        geometries.add(plane);
+                    }
+                    else if (name == "polygon") {
+                        ArrayList<Point3D> points = new ArrayList<Point3D>();
+                        try {
+                            int j = 0;
+                            while (true){
+                                point = node.getAttributes().item(j).getNodeValue().split(" ");
+                                p0 = new Point3D(Double.parseDouble(point[0]), Double.parseDouble(point[1]), Double.parseDouble(point[2]));
+                                points.add(p0);
+                                j++;
+
+                            }
+                        }catch (Exception e){}
+                        Polygon polygon= new Polygon(points.toArray(new Point3D[points.size()]));
+                        geometries.add(polygon);
+                    }
+
                 }
                 Scene scene = new Scene("my_xml_scene");
                 scene.set_ambientLight(new AmbientLight(1, ambientLightColor));
