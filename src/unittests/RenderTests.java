@@ -51,8 +51,6 @@ public class RenderTests {
      */
     @Test
     public void xmlRenderTwoColorTest() throws Exception {
-        Scene scene = new Scene("my");
-        ImageWriter imageWriter = new ImageWriter("dg",1,1,2,2);
-        xmlToScene.convertXmlToScene("C:\\Users\\Liron\\IdeaProjects\\JavaProject\\basicRenderTestTwoColors.xml",  scene, imageWriter);
+        xmlToScene.convertXmlToScene("C:\\Users\\Liron\\IdeaProjects\\JavaProject\\basicRenderTestTwoColors.xml");
     }
 }

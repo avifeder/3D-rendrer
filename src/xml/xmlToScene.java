@@ -21,7 +21,7 @@ import scene.Scene;
 
 public class xmlToScene {
 
-    public static void convertXmlToScene(String path, Scene scene, ImageWriter imageWriter) {
+    public static void convertXmlToScene(String path) {
 
             try {
                 File file = new File(path);
@@ -66,13 +66,13 @@ public class xmlToScene {
                         geometries.add(sphere);
                     }
                 }
-                scene = new Scene("my_xml_scene");
+                Scene scene = new Scene("my_xml_scene");
                 scene.set_ambientLight(new AmbientLight(1, ambientLightColor));
                 scene.set_background(color);
                 scene.set_camera(camera);
                 scene.set_distance(distance);
                 scene.addGeometries(geometries);
-                imageWriter = new ImageWriter("my_xml_image", width, height, nX, nY);
+                ImageWriter imageWriter = new ImageWriter("my_xml_image", width, height, nX, nY);
                 Render render = new Render(imageWriter, scene);
                 render.renderImage();
                 render.printGrid(50, java.awt.Color.YELLOW);
