@@ -92,7 +92,7 @@ public class Render {
      * calcColor - return the intensity int he point
      * @param p no meaning for now
      */
-    public primitives.Color calcColor(Point3D p){
+    private primitives.Color calcColor(Point3D p){
         return scene.get_ambientLight().getIntensity();
     }
 
@@ -101,7 +101,7 @@ public class Render {
      * @param points list of Point3D intersection point's
      * @return the closest intersection point
      */
-    public Point3D getClosestPoint(List<Point3D> points){
+    private Point3D getClosestPoint(List<Point3D> points){
         if(points == null)
             return null;
         Point3D locationOfCamera = scene.get_camera().getLocation();

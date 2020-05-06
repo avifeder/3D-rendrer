@@ -23,14 +23,6 @@ import static java.lang.System.out;
 
 public class xmlToScene {
 
-    public static void main(String[] args) {
-        try {
-            File file = new File(System.getProperty("user.dir")+"\\basicRenderTestTwoColors.xml");
-            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document doc = dBuilder.parse(file);
-            out.print(doc.getDocumentElement().getElementsByTagName("geometries").item(0).getChildNodes().item(3).getAttributes().item(5).getNodeValue());
-        }catch (Exception e){}
-    }
         public static void convertXmlToScene(String path) {
 
             try {

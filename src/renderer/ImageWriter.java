@@ -79,9 +79,9 @@ public class ImageWriter {
         try {
             javax.imageio.ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
             ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
-            jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            jpgWriteParam.setCompressionQuality(1f);
-            jpgWriter.setOutput(new FileImageOutputStream(ouFile));
+            jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);//MODE_EXPLICIT is A constant value that enable a feature for future writes.
+            jpgWriteParam.setCompressionQuality(1f);//Sets the compression quality to 1 - the max value.
+            jpgWriter.setOutput(new FileImageOutputStream(ouFile)); //The ImageOutputStream
             jpgWriter.write(null,new IIOImage(_image, null, null), jpgWriteParam);
             //ImageIO.write(_image, "jpg", ouFile);
         } catch (IOException e) {
