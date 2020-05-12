@@ -6,23 +6,13 @@ import primitives.Color;
  * represents AmbientLight of a scene
  * @author avi && daniel
  */
-public class AmbientLight {
-
-    Color _intensity;
+public class AmbientLight extends Light{
     /**
      * contractor
      * @param kA the Attenuation coefficient of the lamp light
      * @param iA, The intensity of the lamp light
      */
-    public AmbientLight( double kA, Color iA) {
-        this._intensity = iA.scale(kA);
-    }
-
-    /**
-     * getIntensity
-     * @return The intensity of the lamp light scale with the Attenuation coefficient of the lamp light
-     */
-    public Color getIntensity() {
-        return _intensity;
+    public AmbientLight(double kA, Color iA) {
+        super(iA.scale(kA));
     }
 }

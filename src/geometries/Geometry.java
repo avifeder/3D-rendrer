@@ -7,10 +7,34 @@ import primitives.*;
  * Geometry interface represents normal in geometry shapes
  * @author avi && daniel
  */
-public interface Geometry extends Intersectable {
+public abstract class Geometry implements Intersectable {
+    protected Color _emmission;
+
+    /**
+     *
+     */
+    public Color get_emmission() {
+        return _emmission;
+    }
+
+    /**
+     *
+     */
+    public Geometry(Color _emmission) {
+        this._emmission = _emmission;
+    }
+
+    /**
+     * defult
+     */
+    public Geometry()
+    {
+        this(Color.BLACK);
+    }
+
     /**
      * @param point Point3D
      * @return Vector - the normal vector
      */
-    public Vector getNormal(Point3D point);
+    abstract public Vector getNormal(Point3D point);
 }

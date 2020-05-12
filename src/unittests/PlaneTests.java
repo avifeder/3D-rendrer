@@ -1,5 +1,6 @@
 package unittests;
 
+import geometries.Intersectable;
 import geometries.Plane;
 import geometries.Triangle;
 import org.junit.Test;
@@ -8,6 +9,7 @@ import primitives.*;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import geometries.Intersectable.GeoPoint;
 /**
  * Unit tests for geometries.Plane class
  * @author avi && daniel
@@ -39,7 +41,7 @@ public class PlaneTests {
         // TC01: Ray's line is intersects the plane (1 points)
         Plane plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
         Ray ray = new Ray(new Point3D(0,0,1), new Vector(1,0,-1));
-        assertEquals("Bad intersects to plane - line is intersects the plane", List.of(new Point3D(1,0,0)) ,plane.findIntersections(ray));
+        assertEquals("Bad intersects to plane - line is intersects the plane", List.of(new GeoPoint(plane,new Point3D(1,0,0))) ,plane.findIntersections(ray));
         // TC02: Ray's line does not intersect the plane (0 points)
         plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
         ray = new Ray(new Point3D(2,0,0), new Vector(1,0,1));
@@ -61,7 +63,7 @@ public class PlaneTests {
         // TC05:  Ray is orthogonal to the plane and 𝑃0 before the plane (1 points)
         plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
         ray = new Ray(new Point3D(-1,0,0), new Vector(1,0,0));
-        assertEquals("Bad intersects to plane - Ray is orthogonal to the plane and p0 before the plane", List.of(new Point3D(1,0,0)) ,plane.findIntersections(ray));
+        assertEquals("Bad intersects to plane - Ray is orthogonal to the plane and p0 before the plane", List.of(new GeoPoint(plane,new Point3D(1,0,0))) ,plane.findIntersections(ray));
         // TC06:  Ray is orthogonal to the plane and 𝑃0  in the plane (0 points)
         plane = new Plane(new Point3D(1,0,0), new Vector(1,0,0));
         ray = new Ray(new Point3D(1,0,0), new Vector(1,0,0));

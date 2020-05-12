@@ -7,7 +7,7 @@ import primitives.Vector;
 import java.util.Collections;
 
 import static org.junit.Assert.*;
-
+import geometries.Intersectable.GeoPoint;
 
 /**
  * Unit tests for primitives.Vector class

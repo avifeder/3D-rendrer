@@ -1,9 +1,7 @@
 //Daniel Yochanan 322406232 && Avi Feder 208199638
 package geometries;
 
-import primitives.Point3D;
-import primitives.Ray;
-import primitives.Vector;
+import primitives.*;
 
 import java.util.List;
 import static primitives.Util.*;
@@ -13,7 +11,7 @@ import static primitives.Util.*;
  * represents plane by vector and point
  * @author avi && daniel
  */
-public class Plane implements Geometry {
+public class Plane extends Geometry {
     Point3D _p;
     Vector _normal;
 
@@ -26,6 +24,16 @@ public class Plane implements Geometry {
         _p = new Point3D(point);
         _normal = new Vector(normal);
     }
+
+    /**
+     * contractor - gets point, color and normal vector
+     */
+    public Plane(Color color,Point3D point, Vector normal)
+    {
+        this(point, normal);
+        _emmission = color;
+    }
+
 
     /**
      * contractor - gets 3 points in the plane
@@ -70,7 +78,7 @@ public class Plane implements Geometry {
     }
 
     @Override
-    public List<Point3D> findIntersections(Ray ray) throws Exception{
+    public List<GeoPoint> findIntersections(Ray ray) throws Exception{
 
         if(ray.get_point().equals(this._p))
             return null;
@@ -81,6 +89,6 @@ public class Plane implements Geometry {
         double t = mone / mechane;
         if(t <= 0)
             return null;
-        return List.of(ray.getPoint(t));
+        return List.of(new GeoPoint(this, ray.getPoint(t)));
     }
 }

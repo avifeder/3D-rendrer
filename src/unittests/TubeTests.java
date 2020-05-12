@@ -9,7 +9,7 @@ import primitives.Vector;
 import java.util.List;
 
 import static org.junit.Assert.*;
-
+import geometries.Intersectable.GeoPoint;
 /**
  * Unit tests for geometries.Tube class
  * @author avi && daniel
@@ -37,12 +37,13 @@ public class TubeTests {
         // TC01: the ray intersection the tube twice (2 points)
         Tube tube = new Tube(1, new Ray(new Point3D(1, 0, 0), new Vector(1, 0, 0)));
         Ray ray = new Ray(new Point3D(2, 0, 2), new Vector(1, 0, -4));
-        assertEquals("bad output - the ray intersection the tube twice", List.of(new Point3D(2.75, 0, -0.9999999999999996),new Point3D(2.25, 0, 1.0000000000000002)), tube.findIntersections(ray));
+        assertEquals("bad output - the ray intersection the tube twice", List.of(new GeoPoint(tube,new Point3D(2.75, 0, -0.9999999999999996))
+                ,new GeoPoint(tube,new Point3D(2.25, 0, 1.0000000000000002))), tube.findIntersections(ray));
 
         // TC02: the ray intersection the tube one time (1 points)
         tube = new Tube(1, new Ray(new Point3D(1, 0, 0), new Vector(1, 0, 0)));
         ray = new Ray(new Point3D(2, 0, 0.5), new Vector(1, 0, -2.5));
-        assertEquals("bad output - the ray intersection the tube one time", List.of(new Point3D(2.6, 0, -0.9999999999999996)), tube.findIntersections(ray));
+        assertEquals("bad output - the ray intersection the tube one time", List.of(new GeoPoint(tube,new Point3D(2.6, 0, -0.9999999999999996))), tube.findIntersections(ray));
 
         // TC03: the ray doesnt intersection the tube (0 points)
         tube = new Tube(1, new Ray(new Point3D(1, 0, 0), new Vector(1, 0, 0)));
@@ -58,7 +59,8 @@ public class TubeTests {
         // TC04: the ray is orthogonal to the tube (0 points)
         tube = new Tube(1, new Ray(new Point3D(1, 0, 0), new Vector(1, 0, 0)));
         ray = new Ray(new Point3D(4, 0, -2), new Vector(0, 0, 4));
-        assertEquals("bad output - the ray is orthogonal to the tube",  List.of(new Point3D(4, 0, 1),new Point3D(4, 0, -1)), tube.findIntersections(ray));
+        assertEquals("bad output - the ray is orthogonal to the tube",  List.of(new GeoPoint(tube,new Point3D(4, 0, 1)),
+                new GeoPoint(tube,new Point3D(4, 0, -1))), tube.findIntersections(ray));
 
     }
 }

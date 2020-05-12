@@ -12,7 +12,7 @@ import static primitives.Util.*;
  *
  * @author Dan
  */
-public class Polygon implements Geometry {
+public class Polygon extends Geometry {
     /**
      * List of polygon's vertices
      */
@@ -95,6 +95,14 @@ catch (Exception e)
 }
     }
 
+    /**
+     * contractor - gets points and color
+     */
+    public Polygon(Color color, Point3D... vertices) throws Exception{
+       this(vertices);
+       _emmission = color;
+    }
+
     @Override
     public String toString() {
         return "Polygon{" +
@@ -109,7 +117,7 @@ catch (Exception e)
     }
 
     @Override
-    public List<Point3D> findIntersections(Ray ray) throws Exception{
+    public List<GeoPoint> findIntersections(Ray ray) throws Exception{
         for (int i = 0; i < _vertices.size(); ++i){
             if(ray.get_point().equals(this._vertices.get(i)))
                 return null;
@@ -144,8 +152,13 @@ catch (Exception e)
             if(vn1ToVNn[i] > 0 && isAllNegative)
                 isAllNegative = false;
         }
-        if(isAllNegative || isAllPositive)
-            return this._plane.findIntersections(ray);
+        List<GeoPoint> Intersections = null;
+        if(isAllNegative || isAllPositive){
+            Intersections = this._plane.findIntersections(ray);
+            for (int i = 0; i < Intersections.size(); i++)
+                Intersections.get(i).geometry = this;
+            return Intersections;
+        }
         return null;
     }
 }

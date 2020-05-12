@@ -11,7 +11,7 @@ import geometries.*;
 import primitives.*;
 
 import java.util.List;
-
+import geometries.Intersectable.GeoPoint;
 /**
  * Testing Polygons
  * @author Dan
@@ -107,7 +107,7 @@ public class PolygonTests {
         // TC01: Ray's line is Inside polygon (1 points)
         Polygon polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
         Ray ray = new Ray(new Point3D(0,0.5,-1), new Vector(0,0,1));
-        assertEquals("Bad intersects to polygon - line is Inside polygon", List.of(new Point3D(0,0.5,0)) ,polygon.findIntersections(ray));
+        assertEquals("Bad intersects to polygon - line is Inside polygon", List.of(new GeoPoint(polygon, new Point3D(0,0.5,0))) ,polygon.findIntersections(ray));
         // TC01: Ray's line is Outside against edge (0 points)
         polygon = new Polygon(new Point3D(-1,0,0), new Point3D(1,0,0) , new Point3D(0,1,0));
         ray = new Ray(new Point3D(2,0.5,-1), new Vector(0,0,1));

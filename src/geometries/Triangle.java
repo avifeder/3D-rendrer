@@ -1,10 +1,9 @@
 //Daniel Yochanan 322406232 && Avi Feder 208199638
 package geometries;
 
-import primitives.Point3D;
-import primitives.Ray;
-import primitives.Vector;
+import primitives.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static primitives.Util.isZero;
@@ -36,8 +35,20 @@ public class Triangle extends Polygon {
     public Triangle(Point3D point1, Point3D point2, Point3D point3) throws Exception {
         super(point1, point2, point3);
     }
+
+    /**
+     * @param color of the Triangle
+     * @param point1 point of the Triangle
+     * @param point2 point of the Triangle
+     * @param point3 point of the Triangle
+     */
+    public Triangle(Color color, Point3D point1, Point3D point2, Point3D point3) throws Exception {
+        this(point1, point2, point3);
+        _emmission = color;
+    }
+
     @Override
-    public List<Point3D> findIntersections(Ray ray) throws Exception{
+    public List<GeoPoint> findIntersections(Ray ray) throws Exception{
         if(ray.get_point().equals(this._vertices.get(0)) || ray.get_point().equals(this._vertices.get(1)) || ray.get_point().equals(this._vertices.get(2)))
             return null;
         Vector v1 = this._vertices.get(0).subtract(ray.get_point());
@@ -53,10 +64,20 @@ public class Triangle extends Polygon {
         double vn3 = ray.get_vector().dotProduct(N3);
         if(isZero(vn1) || isZero(vn2) || isZero(vn3))
             return null;
-        if(vn1 > 0 && vn2 > 0 && vn3 > 0)
-            return this._plane.findIntersections(ray);
-        if(vn1 < 0 && vn2 < 0 && vn3 < 0)
-            return this._plane.findIntersections(ray);
+        List<GeoPoint> Intersections = null;
+
+        if(vn1 > 0 && vn2 > 0 && vn3 > 0) {
+            Intersections = this._plane.findIntersections(ray);
+            for (int i = 0; i < Intersections.size(); i++)
+                Intersections.get(i).geometry = this;
+            return Intersections;
+        }
+        if(vn1 < 0 && vn2 < 0 && vn3 < 0) {
+            Intersections = this._plane.findIntersections(ray);
+            for (int i = 0; i < Intersections.size(); i++)
+                Intersections.get(i).geometry = this;
+            return Intersections;
+        }
         return null;
     }
 }

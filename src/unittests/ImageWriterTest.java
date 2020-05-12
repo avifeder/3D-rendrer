@@ -5,7 +5,7 @@ import primitives.Color;
 import renderer.ImageWriter;
 
 import static org.junit.Assert.*;
-
+import geometries.Intersectable.GeoPoint;
 /**
  * Unit tests for renderer.ImageWriterTest class
  * @author avi && daniel

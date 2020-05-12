@@ -28,27 +28,27 @@ public class Geometries implements Intersectable  {
             GeometriesList.add(shape);
         }
     }
-    private boolean isAlreadyInList(ArrayList<Point3D> list, Object object)
+    private boolean isAlreadyInList(LinkedList<GeoPoint> list, Object object)
     {
-        Point3D point = (Point3D)object;
-        for (Point3D point1 : list) {
-            if(isZero(point.get_x().get() - point1.get_x().get()) && isZero(point.get_y().get() - point1.get_y().get())
-            && isZero(point.get_z().get() - point1.get_z().get()))
+        GeoPoint geoPoint = (GeoPoint) object;
+        for (GeoPoint geoPoint1 : list) {
+            if(isZero(geoPoint.point.get_x().get() - geoPoint1.point.get_x().get()) && isZero(geoPoint.point.get_y().get() - geoPoint1.point.get_y().get())
+            && isZero(geoPoint.point.get_z().get() - geoPoint1.point.get_z().get()))
                 return true;
         }
         return false;
     }
     @Override
-    public List<Point3D> findIntersections(Ray ray) throws Exception {
-        List returnIntersectionsList = new ArrayList();
-        List curShapeIntersections = new ArrayList<Point3D>();
+    public List<GeoPoint> findIntersections(Ray ray) throws Exception {
+        List returnIntersectionsList = new LinkedList<GeoPoint>();
+        List curShapeIntersections = new LinkedList<GeoPoint>();
         for (Intersectable shape:GeometriesList) {
             curShapeIntersections = shape.findIntersections(ray);
             if(curShapeIntersections != null)
             {
-                for (Object point : curShapeIntersections) {
-                    if(!isAlreadyInList((ArrayList<Point3D>)returnIntersectionsList, point))
-                        returnIntersectionsList.add(point);
+                for (Object geoPoint : curShapeIntersections) {
+                    if(!isAlreadyInList((LinkedList<GeoPoint>)returnIntersectionsList, geoPoint))
+                        returnIntersectionsList.add(geoPoint);
                 }
             }
         }

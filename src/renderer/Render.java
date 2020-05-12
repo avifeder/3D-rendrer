@@ -9,7 +9,7 @@ import scene.Scene;
 
 import java.awt.*;
 import java.util.List;
-
+import geometries.Intersectable.GeoPoint;
 
 /**
  * Render class
@@ -49,11 +49,11 @@ public class Render {
             for(int y = 0; y < nY; y++) {
                 try {
                     Ray ray = camera.constructRayThroughPixel(nX, nY, x, y, distance, width, height);
-                    List<Point3D> intersectionPoints = geometries.findIntersections(ray);
+                    List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
                     if(intersectionPoints == null)
                         imageWriter.writePixel(x, y, background);
                     else {
-                        Point3D closestPoint = getClosestPoint(intersectionPoints);
+                        GeoPoint closestPoint = getClosestPoint(intersectionPoints);
                         imageWriter.writePixel(x, y, calcColor(closestPoint).getColor());
                     }
                 }
@@ -92,8 +92,8 @@ public class Render {
      * calcColor - return the intensity int he point
      * @param p no meaning for now
      */
-    private primitives.Color calcColor(Point3D p){
-        return scene.get_ambientLight().getIntensity();
+    private primitives.Color calcColor(GeoPoint p){
+        return scene.get_ambientLight().getIntensity().add(p.geometry.get_emmission());
     }
 
     /**
@@ -101,14 +101,14 @@ public class Render {
      * @param points list of Point3D intersection point's
      * @return the closest intersection point
      */
-    private Point3D getClosestPoint(List<Point3D> points){
+    private GeoPoint getClosestPoint(List<GeoPoint> points){
         if(points == null)
             return null;
         Point3D locationOfCamera = scene.get_camera().getLocation();
-        Point3D closestPoint = points.get(0);
+        GeoPoint closestPoint = points.get(0);
         for(int i = 1; i < points.size(); i++)
         {
-            if(points.get(i).distance(locationOfCamera) < closestPoint.distance(locationOfCamera))
+            if(points.get(i).point.distance(locationOfCamera) < closestPoint.point.distance(locationOfCamera))
                 closestPoint = points.get(i);
         }
         return closestPoint;

@@ -7,7 +7,7 @@ package geometries;
  * represents geometry shapes with radius by vector and point
  * @author avi && daniel
  */
-public abstract class RadialGeometry implements Geometry{
+public abstract class RadialGeometry extends Geometry{
     double _radius;
 
     /**

@@ -1,11 +1,10 @@
 //Daniel Yochanan 322406232 && Avi Feder 208199638
 package geometries;
 
-import primitives.Point3D;
-import primitives.Ray;
-import primitives.Vector;
+import primitives.*;
 
-import java.util.ArrayList;
+
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -24,10 +23,22 @@ public class Tube extends RadialGeometry {
     /**
      * contractor - gets double radius
      * @param radius of the Tube
+     * @param ray the direction of the Tube
      */
     public Tube(double radius, Ray ray) {
         super(radius);
         _axisRay = ray;
+    }
+
+    /**
+     * contractor - gets double radius
+     * @param radius of the Tube
+     * @param ray the direction of the Tube
+     * @param color of the Tube
+     */
+    public Tube(Color color, double radius, Ray ray) {
+        this(radius, ray);
+        _emmission = color;
     }
 
     /**
@@ -54,7 +65,7 @@ public class Tube extends RadialGeometry {
     }
 
     @Override
-    public List<Point3D> findIntersections(Ray ray) throws Exception {
+    public List<GeoPoint> findIntersections(Ray ray) throws Exception {
             Point3D ray_point = ray.get_point();
 
             Vector ray_vector = ray.get_vector(),
@@ -80,30 +91,30 @@ public class Tube extends RadialGeometry {
             if (delta < 0) {// 0 Intersections
                 return null;
             }
-            ArrayList<Point3D> intersections = new ArrayList<Point3D>();
+            LinkedList<GeoPoint> intersections = new LinkedList<GeoPoint>();
             double t1 = (-B + Math.sqrt(delta)) / (2 * A),
                     t2 = (-B - Math.sqrt(delta)) / (2 * A);
 
-            if (delta == 0) {// 1 Intersections
+            if (delta == 0) {
                 if (-B / (2 * A) < 0)
-                    return intersections;
-                intersections.add(new Vector(ray_point.add(ray_vector.scale(-B / (2 * A)))).getPoint());
+                    return null;
+                intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(-B / (2 * A)))).getPoint()));// 1 Intersections
                 return intersections;
             }
             else if (t1 < 0 && t2 < 0){
-                return intersections;
+                return null;
             }
             else if (t1 < 0 && t2 > 0) {
-                intersections.add(new Vector(ray_point.add(ray_vector.scale(t2))).getPoint());
+                intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t2))).getPoint()));
                 return intersections;
             }
             else if (t1 > 0 && t2 < 0) {
-                intersections.add(new Vector(ray_point.add(ray_vector.scale(t1))).getPoint());
+                intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t1))).getPoint()));
                 return intersections;
             }
             else {
-                intersections.add(new Vector(ray_point.add(ray_vector.scale(t1))).getPoint());
-                intersections.add(new Vector(ray_point.add(ray_vector.scale(t2))).getPoint());
+                intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t1))).getPoint()));
+                intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t2))).getPoint()));
                 return intersections;
             }
 

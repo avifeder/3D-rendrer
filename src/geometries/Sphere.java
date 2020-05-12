@@ -1,11 +1,10 @@
 //Daniel Yochanan 322406232 && Avi Feder 208199638
 package geometries;
 
-import primitives.Point3D;
-import primitives.Ray;
-import primitives.Vector;
+import primitives.*;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import static primitives.Util.isZero;
 
@@ -21,10 +20,22 @@ public class Sphere extends RadialGeometry {
     /**
      * contractor - gets double radius
      * @param radius of the Sphere
+     * @param p center of the Sphere
      */
     public Sphere(double radius, Point3D p) {
         super(radius);
         _center = p;
+    }
+
+    /**
+     * contractor - gets double radius
+     * @param radius of the Sphere
+     * @param p center of the Sphere
+     * @param color of the Sphere
+     */
+    public Sphere(Color color, double radius, Point3D p) {
+        this(radius, p);
+        _emmission = color;
     }
 
     public Point3D get_center() {
@@ -48,9 +59,9 @@ public class Sphere extends RadialGeometry {
     }
 
     @Override
-    public List<Point3D> findIntersections(Ray ray) throws Exception {
+    public List<GeoPoint> findIntersections(Ray ray) throws Exception {
         if(this._center.equals(ray.get_point()))
-            return List.of(_center.add(ray.get_vector().scale(_radius)));
+            return List.of(new GeoPoint(this, _center.add(ray.get_vector().scale(_radius))));
         Vector u = this._center.subtract(ray.get_point());
         double tm = ray.get_vector().dotProduct(u);
         double d = Math.sqrt(u.lengthSquared()-tm*tm);
@@ -67,11 +78,11 @@ public class Sphere extends RadialGeometry {
             return  null;
         if(t1 < 0 && isZero(t2))
             return  null;
-        ArrayList list = new ArrayList();
+        List list = new LinkedList<GeoPoint>();
         if(t1 > 0)
-            list.add(ray.getPoint(t1));
+            list.add(new GeoPoint(this, ray.getPoint(t1)));
         if(t2 > 0)
-            list.add(ray.getPoint(t2));
+            list.add(new GeoPoint(this,ray.getPoint(t2)));
         return list;
     }
 }

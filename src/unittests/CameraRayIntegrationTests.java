@@ -12,7 +12,7 @@ import primitives.Vector;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-
+import geometries.Intersectable.GeoPoint;
 /**
  * Testing Camera and ray intersections - integration
  * @author Daniel & Avi

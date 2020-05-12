@@ -1,9 +1,8 @@
 //Daniel Yochanan 322406232 && Avi Feder 208199638
 package geometries;
 
-import primitives.Point3D;
-import primitives.Ray;
-import primitives.Vector;
+
+import primitives.*;
 
 
 /**
@@ -20,10 +19,23 @@ public class Cylinder extends Tube {
 
     /**
      * @param radius double
+     * @param ray    Ray
+     * @param height double
      */
     public Cylinder(double radius, Ray ray, double height) {
         super(radius, ray);
         _height = height;
+    }
+
+    /**
+     * @param radius double
+     * @param ray    Ray
+     * @param height double
+     * @param color  Color
+     */
+    public Cylinder(Color color,double radius, Ray ray, double height) {
+        this(radius, ray, height);
+        _emmission = color;
     }
 
     @Override
