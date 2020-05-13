@@ -37,10 +37,21 @@ public class Tube extends RadialGeometry {
      * @param color of the Tube
      */
     public Tube(Color color, double radius, Ray ray) {
-        this(radius, ray);
-        _emmission = color;
+        super(color, radius);
+        _axisRay = ray;
     }
 
+    /**
+     * contractor - gets double radius
+     * @param radius of the Tube
+     * @param ray the direction of the Tube
+     * @param color of the Tube
+     * @param material of the Tube
+     */
+    public Tube(Color color,Material material, double radius, Ray ray) {
+        super(material, color, radius);
+        _axisRay = ray;
+    }
     /**
      * getNormal - gets the normal of the tube
      * @param point of the Tube

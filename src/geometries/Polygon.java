@@ -103,6 +103,14 @@ catch (Exception e)
        _emmission = color;
     }
 
+    /**
+     * contractor - gets points, color and material
+     */
+    public Polygon(Color color,Material material, Point3D... vertices) throws Exception{
+        this(color, vertices);
+        _material = material;
+    }
+
     @Override
     public String toString() {
         return "Polygon{" +

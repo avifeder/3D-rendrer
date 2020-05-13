@@ -34,8 +34,20 @@ public class Cylinder extends Tube {
      * @param color  Color
      */
     public Cylinder(Color color,double radius, Ray ray, double height) {
-        this(radius, ray, height);
-        _emmission = color;
+        super(color, radius, ray);
+        _height = height;
+    }
+
+    /**
+     * @param radius double
+     * @param ray    Ray
+     * @param height double
+     * @param color  Color
+     * @param material  material
+     */
+    public Cylinder(Color color, Material material, double radius, Ray ray, double height) {
+        super(color,material, radius, ray);
+        _height = height;
     }
 
     @Override

@@ -1,15 +1,20 @@
 package renderer;
 
 import elements.Camera;
+import elements.LightSource;
 import geometries.Intersectable;
 import geometries.RadialGeometry;
+import primitives.Material;
 import primitives.Point3D;
 import primitives.Ray;
+import primitives.Vector;
 import scene.Scene;
 
 import java.awt.*;
 import java.util.List;
 import geometries.Intersectable.GeoPoint;
+
+import static primitives.Util.alignZero;
 
 /**
  * Render class
@@ -89,13 +94,76 @@ public class Render {
     }
 
     /**
-     * calcColor - return the intensity int he point
-     * @param p no meaning for now
+     * calcColor - return the intensity in a point
+     * @param p the point we calculate color
+     * @return the color intensity in the point
      */
     private primitives.Color calcColor(GeoPoint p){
-        return scene.get_ambientLight().getIntensity().add(p.geometry.get_emmission());
+        try {
+            primitives.Color color = scene.get_ambientLight().get_intensity();
+            color = color.add(p.geometry.get_emmission());
+            Vector v = p.point.subtract(scene.get_camera().getLocation()).normalize();
+            Vector n = p.geometry.getNormal(p.point);
+            Material material = p.geometry.get_material();
+            int nShininess = material.get_nShininess();
+            double kd = material.get_kD();
+            double ks = material.get_kS();
+            for (LightSource lightSource : scene.get_lights()){
+                Vector l = lightSource.getL(p.point);
+                double nl = alignZero(n.dotProduct(l));
+                double nv = alignZero(n.dotProduct(v));
+                if((nl>0 && nv>0) || (nl<0 && nv<0))
+                {
+                    primitives.Color ip =lightSource.getIntensity(p.point);
+                    color = color.add(calcDiffusive(kd, nl, ip), calcSpecular(ks, l, n, nl, v, nShininess, ip));
+                }
+            }
+            return color;
+        }
+        catch (Exception e)
+        {
+            return scene.get_background();
+        }
     }
 
+    /**
+     * Calculate specular component
+     * @param ks specular component
+     * @param l direction from light to point
+     * @param n normal to the point
+     * @param nl dotProduct n*l
+     * @param v direction from camera to point
+     * @param nShininess shininess
+     * @param ip the light intensity at the point
+     * @return specular component in the point
+     */
+    private primitives.Color calcSpecular(double ks, Vector l, Vector n, double nl, Vector v, int nShininess, primitives.Color ip){
+        try {
+            Vector r = l.add(n.scale(-2*nl));
+            double minusVR = -alignZero(r.dotProduct(v));
+            if(minusVR <= 0)
+                return primitives.Color.BLACK;
+            return ip.scale(ks*Math.pow(minusVR, nShininess));
+        }
+        catch (Exception e)
+        {
+            return this.scene.get_background();
+        }
+    }
+
+    /**
+     * Calculate diffusive component
+     * @param kd diffusive component
+     * @param nl dotProduct n*l
+     * @param ip the light intensity at the point
+     * @return diffusive component in the point
+     */
+    private primitives.Color calcDiffusive(double kd, double nl, primitives.Color ip)
+    {
+        if(nl < 0)
+            nl = -nl;
+        return ip.scale(nl * kd);
+    }
     /**
      * getClosestPoint - calculate the closest intersection point
      * @param points list of Point3D intersection point's

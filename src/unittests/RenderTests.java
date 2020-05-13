@@ -86,6 +86,8 @@ public class RenderTests {
     public void xmlRenderTwoColorTest() throws Exception {
         xmlToScene.convertXmlToScene(System.getProperty("user.dir")+"\\basicRenderTestTwoColors.xml");
     }
+
+
     /**
      * Test method for
      *{@link renderer.Render# getClosestPoint(List<Point3D>)

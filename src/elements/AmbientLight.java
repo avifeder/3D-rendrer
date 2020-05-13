@@ -1,6 +1,7 @@
 package elements;
 
 import primitives.Color;
+
 /**
  * AmbientLight class
  * represents AmbientLight of a scene

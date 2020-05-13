@@ -34,8 +34,20 @@ public class Sphere extends RadialGeometry {
      * @param color of the Sphere
      */
     public Sphere(Color color, double radius, Point3D p) {
-        this(radius, p);
-        _emmission = color;
+        super(color, radius);
+        _center = p;
+    }
+
+    /**
+     * contractor - gets double radius
+     * @param radius of the Sphere
+     * @param p center of the Sphere
+     * @param color of the Sphere
+     * @param material of the Sphere
+     */
+    public Sphere(Color color, Material material, double radius, Point3D p) {
+        super(material, color, radius);
+        _center = p;
     }
 
     public Point3D get_center() {

@@ -34,6 +34,14 @@ public class Plane extends Geometry {
         _emmission = color;
     }
 
+    /**
+     * contractor - gets point, color, material and normal vector
+     */
+    public Plane(Color color, Material material,Point3D point, Vector normal)
+    {
+        this(color, point, normal);
+        _material = material;
+    }
 
     /**
      * contractor - gets 3 points in the plane
@@ -49,6 +57,23 @@ public class Plane extends Geometry {
         catch (Exception e){}
     }
 
+    /**
+     * contractor - gets 3 points in the plane and color
+     */
+    public Plane(Color color,Point3D point1,Point3D point2,Point3D point3)
+    {
+        this(point1, point2, point3);
+        _emmission = color;
+    }
+
+    /**
+     * contractor - gets 3 points in the plane, color and material
+     */
+    public Plane(Color color, Material material,Point3D point1,Point3D point2,Point3D point3)
+    {
+        this(color, point1, point2, point3);
+        _material = material;
+    }
 
     /**
      * @return Point3D in the plane

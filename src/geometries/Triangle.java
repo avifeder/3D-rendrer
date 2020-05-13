@@ -43,8 +43,17 @@ public class Triangle extends Polygon {
      * @param point3 point of the Triangle
      */
     public Triangle(Color color, Point3D point1, Point3D point2, Point3D point3) throws Exception {
-        this(point1, point2, point3);
-        _emmission = color;
+        super(color, point1, point2, point3);
+    }
+    /**
+     * @param color of the Triangle
+     * @param point1 point of the Triangle
+     * @param point2 point of the Triangle
+     * @param point3 point of the Triangle
+     * @param material material of the Triangle
+     */
+    public Triangle(Color color,Material material, Point3D point1, Point3D point2, Point3D point3) throws Exception {
+        super(color,material, point1, point2, point3);
     }
 
     @Override
