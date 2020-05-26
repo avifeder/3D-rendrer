@@ -13,7 +13,10 @@ import static primitives.Util.isZero;
 public class Ray {
     Point3D _point;
     Vector _vector;
-
+    /**
+     * DELTA - a very small value
+     */
+    private static final double DELTA = 0.1;
     public Point3D get_point() {
         return _point;
     }
@@ -45,6 +48,16 @@ public class Ray {
     {
         _point = new Point3D(ray._point);
         _vector = new Vector(ray._vector);
+    }
+    /**
+     * contractor
+     * @param point and vector and normal
+     */
+    public Ray(Point3D point, Vector vector, Vector n) throws Exception
+    {
+        Vector deltaVector = n.scale(n.dotProduct(vector) > 0 ? DELTA : -DELTA);
+        _point = point.add(deltaVector);
+        _vector = vector;
     }
 
     @Override

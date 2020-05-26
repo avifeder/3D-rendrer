@@ -28,5 +28,19 @@ public interface Intersectable {
                     Objects.equals(point, geoPoint.point);
         }
     }
-    List<GeoPoint> findIntersections(Ray ray) throws Exception;
+    /**
+     * findIntersections - calculate the intersection points of a ray with geometry
+     * @param ray the ray we want to find the intersection points with geometry
+     * @return the intersection points
+     */
+    default List<GeoPoint> findIntersections(Ray ray) throws Exception{
+        return findIntersections(ray, Double.POSITIVE_INFINITY);
+    }
+    /**
+     * findIntersections - calculate the intersection points of a ray with geometry in a max distance
+     * @param ray the ray we want to find the intersection points with geometry
+     * @return the intersection points
+     */
+    List<GeoPoint> findIntersections(Ray ray, double max)throws Exception;
+
 }

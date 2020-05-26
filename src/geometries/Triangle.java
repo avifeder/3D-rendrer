@@ -55,9 +55,13 @@ public class Triangle extends Polygon {
     public Triangle(Color color,Material material, Point3D point1, Point3D point2, Point3D point3) throws Exception {
         super(color,material, point1, point2, point3);
     }
-
+    /**
+     * findIntersections - calculate the intersection points of a ray with geometry in a max distance
+     * @param ray the ray we want to find the intersection points with geometry
+     * @return the intersection points
+     */
     @Override
-    public List<GeoPoint> findIntersections(Ray ray) throws Exception{
+    public List<GeoPoint> findIntersections(Ray ray, double max) throws Exception{
         if(ray.get_point().equals(this._vertices.get(0)) || ray.get_point().equals(this._vertices.get(1)) || ray.get_point().equals(this._vertices.get(2)))
             return null;
         Vector v1 = this._vertices.get(0).subtract(ray.get_point());
@@ -76,15 +80,19 @@ public class Triangle extends Polygon {
         List<GeoPoint> Intersections = null;
 
         if(vn1 > 0 && vn2 > 0 && vn3 > 0) {
-            Intersections = this._plane.findIntersections(ray);
-            for (int i = 0; i < Intersections.size(); i++)
-                Intersections.get(i).geometry = this;
+            Intersections = this._plane.findIntersections(ray, max);
+            if(Intersections != null) {
+                for (int i = 0; i < Intersections.size(); i++)
+                    Intersections.get(i).geometry = this;
+            }
             return Intersections;
         }
         if(vn1 < 0 && vn2 < 0 && vn3 < 0) {
-            Intersections = this._plane.findIntersections(ray);
-            for (int i = 0; i < Intersections.size(); i++)
-                Intersections.get(i).geometry = this;
+            Intersections = this._plane.findIntersections(ray, max);
+            if(Intersections != null) {
+                for (int i = 0; i < Intersections.size(); i++)
+                    Intersections.get(i).geometry = this;
+            }
             return Intersections;
         }
         return null;

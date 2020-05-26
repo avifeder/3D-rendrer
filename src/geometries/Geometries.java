@@ -38,12 +38,17 @@ public class Geometries implements Intersectable  {
         }
         return false;
     }
+    /**
+     * findIntersections - calculate the intersection points of a ray with geometry in a max distance
+     * @param ray the ray we want to find the intersection points with geometry
+     * @return the intersection points
+     */
     @Override
-    public List<GeoPoint> findIntersections(Ray ray) throws Exception {
+    public List<GeoPoint> findIntersections(Ray ray, double max) throws Exception {
         List returnIntersectionsList = new LinkedList<GeoPoint>();
         List curShapeIntersections = new LinkedList<GeoPoint>();
         for (Intersectable shape:GeometriesList) {
-            curShapeIntersections = shape.findIntersections(ray);
+            curShapeIntersections = shape.findIntersections(ray, max);
             if(curShapeIntersections != null)
             {
                 for (Object geoPoint : curShapeIntersections) {
@@ -54,4 +59,5 @@ public class Geometries implements Intersectable  {
         }
         return returnIntersectionsList.size() == 0 ? null : returnIntersectionsList;
     }
+
 }

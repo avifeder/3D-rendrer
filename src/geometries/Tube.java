@@ -7,6 +7,8 @@ import primitives.*;
 import java.util.LinkedList;
 import java.util.List;
 
+import static primitives.Util.alignZero;
+
 /**
  * Tube class extends RadialGeometry
  * represents geometry Tube
@@ -74,9 +76,13 @@ public class Tube extends RadialGeometry {
                 "Ray =" + _axisRay + ", Radius =" + _radius +
                 '}';
     }
-
+    /**
+     * findIntersections - calculate the intersection points of a ray with geometry in a max distance
+     * @param ray the ray we want to find the intersection points with geometry
+     * @return the intersection points
+     */
     @Override
-    public List<GeoPoint> findIntersections(Ray ray) throws Exception {
+    public List<GeoPoint> findIntersections(Ray ray, double max) throws Exception {
             Point3D ray_point = ray.get_point();
 
             Vector ray_vector = ray.get_vector(),
@@ -107,7 +113,7 @@ public class Tube extends RadialGeometry {
                     t2 = (-B - Math.sqrt(delta)) / (2 * A);
 
             if (delta == 0) {
-                if (-B / (2 * A) < 0)
+                if (-B / (2 * A) < 0 || alignZero((-B / (2 * A) - max)) > 0)
                     return null;
                 intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(-B / (2 * A)))).getPoint()));// 1 Intersections
                 return intersections;
@@ -115,19 +121,24 @@ public class Tube extends RadialGeometry {
             else if (t1 < 0 && t2 < 0){
                 return null;
             }
-            else if (t1 < 0 && t2 > 0) {
+            else if (t1 < 0 && t2 > 0 && alignZero((t2 - max)) <= 0) {
                 intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t2))).getPoint()));
                 return intersections;
             }
-            else if (t1 > 0 && t2 < 0) {
+            else if (t1 > 0 && t2 < 0 && alignZero((t1 - max)) <= 0) {
                 intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t1))).getPoint()));
                 return intersections;
             }
             else {
-                intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t1))).getPoint()));
-                intersections.add(new GeoPoint(this,new Vector(ray_point.add(ray_vector.scale(t2))).getPoint()));
+                if (alignZero((t1 - max)) <= 0) {
+                    intersections.add(new GeoPoint(this, new Vector(ray_point.add(ray_vector.scale(t1))).getPoint()));
+                }
+                if (alignZero((t2 - max)) <= 0) {
+                    intersections.add(new GeoPoint(this, new Vector(ray_point.add(ray_vector.scale(t2))).getPoint()));
+                }
                 return intersections;
             }
 
     }
+
 }

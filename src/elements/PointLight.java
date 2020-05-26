@@ -44,4 +44,13 @@ public class PointLight  extends Light implements LightSource {
         }
 
     }
+    /**
+     * getDistance - calculate the distance from light to the point
+     * @param point the point we want to find the distance from
+     * @return the distance from light to the point
+     */
+    @Override
+    public double getDistance(Point3D point) {
+        return this._position.distance(point);
+    }
 }

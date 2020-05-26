@@ -101,10 +101,13 @@ public class Plane extends Geometry {
     public Vector getNormal(Point3D point) {
         return getNormal();
     }
-
+    /**
+     * findIntersections - calculate the intersection points of a ray with geometry in a max distance
+     * @param ray the ray we want to find the intersection points with geometry
+     * @return the intersection points
+     */
     @Override
-    public List<GeoPoint> findIntersections(Ray ray) throws Exception{
-
+    public List<GeoPoint> findIntersections(Ray ray, double max) throws Exception{
         if(ray.get_point().equals(this._p))
             return null;
         double mone = this._normal.dotProduct(this._p.subtract(ray.get_point()));
@@ -112,8 +115,9 @@ public class Plane extends Geometry {
         if(isZero(mone) || isZero(mechane))
             return null;
         double t = mone / mechane;
-        if(t <= 0)
+        if(t <= 0 || alignZero((t - max)) > 0)
             return null;
         return List.of(new GeoPoint(this, ray.getPoint(t)));
     }
+
 }

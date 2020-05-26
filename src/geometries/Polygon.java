@@ -123,9 +123,13 @@ catch (Exception e)
     public Vector getNormal(Point3D point) {
         return _plane.getNormal();
     }
-
+    /**
+     * findIntersections - calculate the intersection points of a ray with geometry in a max distance
+     * @param ray the ray we want to find the intersection points with geometry
+     * @return the intersection points
+     */
     @Override
-    public List<GeoPoint> findIntersections(Ray ray) throws Exception{
+    public List<GeoPoint> findIntersections(Ray ray, double max) throws Exception{
         for (int i = 0; i < _vertices.size(); ++i){
             if(ray.get_point().equals(this._vertices.get(i)))
                 return null;
@@ -162,7 +166,7 @@ catch (Exception e)
         }
         List<GeoPoint> Intersections = null;
         if(isAllNegative || isAllPositive){
-            Intersections = this._plane.findIntersections(ray);
+            Intersections = this._plane.findIntersections(ray, max);
             for (int i = 0; i < Intersections.size(); i++)
                 Intersections.get(i).geometry = this;
             return Intersections;
