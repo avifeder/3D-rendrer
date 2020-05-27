@@ -3,6 +3,7 @@
  */
 package unittests;
 
+import geometries.Cylinder;
 import org.junit.Test;
 
 import elements.*;
@@ -105,4 +106,75 @@ public class ReflectionRefractionTests {
         render.renderImage();
         render.writeToImage();
     }
+
+
+    /**
+     * Produce a picture of a two triangles and two Spheres
+     */
+    @Test
+    public void multiShapesTransparent()throws Exception {
+        Scene scene = new Scene("Test scene");
+        scene.set_camera(new Camera(new Point3D(0, 0, -1000), new Vector(0, 0, 1), new Vector(0, -1, 0)));
+        scene.set_distance(1000);
+        scene.set_background(Color.BLACK);
+        scene.set_ambientLight(new AmbientLight(0.15, new Color(java.awt.Color.WHITE)));
+
+        scene.addGeometries( //
+                new Triangle(new Color(java.awt.Color.BLACK), new Material(0.5, 0.5, 60, 0, 1), //
+                        new Point3D(-150, 150, 115), new Point3D(150, 150, 135), new Point3D(75, -75, 150)), //
+                new Triangle(new Color(java.awt.Color.BLACK), new Material(0.5, 0.5, 60, 0, 1), //
+                        new Point3D(-150, 150, 115), new Point3D(-70, -70, 140), new Point3D(75, -75, 150)), //
+                new Sphere(new Color(java.awt.Color.CYAN), new Material(0.2, 0.2, 30, 0, 0), // )
+                        30, new Point3D(40, -60, -150)),
+                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 50,
+                            new Point3D(-55, 55, 50)));
+
+        scene.addLights(
+                new SpotLight(new Color(1000, 600, 0), new Point3D(-100, 100, -500), new Vector(-1, 1, 2), 1,
+                        0.0004, 0.0000006));
+
+        ImageWriter imageWriter = new ImageWriter("multiShapesTransparent", 200, 200, 600, 600);
+        Render render = new Render(imageWriter, scene);
+
+        render.renderImage();
+        render.writeToImage();
+    }
+
+    /**
+     * bonus with 10 shapes
+     */
+    @Test
+    public void bonusMultiShapes()throws Exception {
+        Scene scene = new Scene("Test scene");
+        scene.set_camera(new Camera(new Point3D(-500, -1500, 0), new Vector(1, 1, 0), new Vector(0, 0, 1)));
+        scene.set_distance(200);
+        scene.set_background(new Color(java.awt.Color.BLACK));
+        scene.set_ambientLight(new AmbientLight(0.15, new Color(java.awt.Color.WHITE)));
+        scene.addGeometries( //
+                new Triangle(new Color(java.awt.Color.WHITE), new Material(0.5, 0.5, 60, 0.5, 0.5), //
+                        new Point3D(1000, 1000, 0), new Point3D(1000, -1000, 0), new Point3D(1000, 0, 1000)),
+                new Triangle(new Color(java.awt.Color.WHITE), new Material(0.5, 0.5, 60, 0.5, 0.5), //
+                        new Point3D(1000, 1000, 0), new Point3D(1000, -1000, 0), new Point3D(1000, 0, -1000)),
+                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
+                        new Point3D(950, 0, 0)),
+                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
+                        new Point3D(950, 0, -250)),
+                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
+                        new Point3D(950, 0, 250)),
+                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
+                        new Point3D(950, 250, 0)),
+                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
+                        new Point3D(950, -250, 0)));
+
+        scene.addLights(
+                new SpotLight(new Color(java.awt.Color.WHITE), new Point3D(0, 0, 0), new Vector(1, 0, 0), 1,
+                        0.0004, 0.0000006));
+
+        ImageWriter imageWriter = new ImageWriter("bonus 10 shapes", 200, 200, 600, 600);
+        Render render = new Render(imageWriter, scene);
+
+        render.renderImage();
+        render.writeToImage();
+    }
+
 }

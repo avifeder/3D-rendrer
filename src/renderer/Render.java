@@ -31,7 +31,7 @@ public class Render {
      */
     private static final int MAX_CALC_COLOR_LEVEL = 10;
     /**
-     * MIN_CALC_COLOR_K - stoping calculate color at this value of k
+     * MIN_CALC_COLOR_K - stopping calculate color at this value of k
      */
     private static final double MIN_CALC_COLOR_K = 0.001;
 
@@ -122,12 +122,14 @@ public class Render {
             for (LightSource lightSource : scene.get_lights()){
                 Vector l = lightSource.getL(p.point);
                 double nl = alignZero(n.dotProduct(l));
-                if((nl>0 && nv>0) || (nl<0 && nv<0))
+                //if((nl>0 && nv>0) || (nl<0 && nv<0))
+                if(nl*nv>0)
                 {
-                    if(unshaded(l, n, p, lightSource)){
-                         primitives.Color ip =lightSource.getIntensity(p.point);
+                   // if(unshaded(l, n, p, lightSource)){
+                        double ktr = transparency(l, n, p, lightSource);
+                         primitives.Color ip =lightSource.getIntensity(p.point).scale(ktr);
                          color = color.add(calcDiffusive(kd, nl, ip), calcSpecular(ks, l, n, nl, v, nShininess, ip));
-                    }
+                    //}
                 }
             }
 
@@ -228,6 +230,39 @@ public class Render {
             return true;
         }
     }
+
+    /**
+     * unshaded -cheak if an intersection point need to be shadow or not
+     * @param l direction from light to point
+     * @param n normal to the point
+     * @param geopoint the point we cheak for shadow
+     * @param lightSource the light source
+     * @return true if its an intersection point need to be unshadow
+     */
+    private double transparency(Vector l, Vector n, GeoPoint geopoint, LightSource lightSource){
+        try {
+            Vector fromPointToLightVector = l.scale(-1);
+            Ray fromPointToLightRay = new Ray(geopoint.point, fromPointToLightVector, n);
+            List<GeoPoint> intersections = scene.get_geometries().findIntersections(fromPointToLightRay);
+            if(intersections==null || intersections.size() == 0)
+                return 1;
+
+            double lightDistance = lightSource.getDistance(geopoint.point);
+            double ktr = 1.0;
+            for (GeoPoint gp : intersections) {
+                if (alignZero(gp.point.distance(geopoint.point) - lightDistance) <= 0) {
+                    ktr *= gp.geometry.get_material().get_KT();
+                    if (ktr < MIN_CALC_COLOR_K)
+                        return 0.0;
+                }
+            }
+            return ktr;
+        }
+        catch (Exception e){
+            return 0;
+        }
+    }
+
     /**
      * contract Reflected Ray
      * @param n normal to point
