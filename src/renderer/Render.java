@@ -133,7 +133,7 @@ public class Render {
 
             double kr = material.get_KR(), kkr = k*kr;
             if(kkr > MIN_CALC_COLOR_K) {
-                Ray reflectedRay = constructReflectedRay(n, nv, p.point,ray);
+                Ray reflectedRay = constructReflectedRay(n, p.point,ray);
                 GeoPoint gp = findCLosestIntersection(reflectedRay);
                 color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, reflectedRay, level -1, kkr).scale(kr));
             }
@@ -231,12 +231,12 @@ public class Render {
     /**
      * contract Reflected Ray
      * @param n normal to point
-     * @param nv normal dot prodoct the vector of the origin ray
      * @param point, the intersection point
      * @param ray, the ray we wants his reflected ray
      */
-    private Ray constructReflectedRay(Vector n, double nv, Point3D point, Ray ray) throws Exception
+    private Ray constructReflectedRay(Vector n, Point3D point, Ray ray) throws Exception
     {
+        double nv = ray.get_vector().dotProduct(n);
         Vector v = ray.get_vector();
         Vector ref = v.add(n.scale(-2*nv));
         return new Ray(point, ref, n);
