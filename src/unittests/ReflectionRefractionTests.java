@@ -136,6 +136,7 @@ public class ReflectionRefractionTests {
         ImageWriter imageWriter = new ImageWriter("multiShapesTransparent", 200, 200, 600, 600);
         Render render = new Render(imageWriter, scene);
 
+        render.setMultiThreading(4);
         render.renderImage();
         render.writeToImage();
     }

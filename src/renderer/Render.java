@@ -1,20 +1,14 @@
 package renderer;
 
-import elements.Camera;
-import elements.LightSource;
+import elements.*;
 import geometries.Intersectable;
-import geometries.RadialGeometry;
-import primitives.Material;
-import primitives.Point3D;
-import primitives.Ray;
-import primitives.Vector;
+import primitives.*;
 import scene.Scene;
-
-import java.awt.*;
-import java.util.ArrayList;
+import java.awt.Color;
 import java.util.List;
-import geometries.Intersectable.GeoPoint;
 
+
+import geometries.Intersectable.GeoPoint;
 import static primitives.Util.alignZero;
 
 /**
@@ -36,6 +30,100 @@ public class Render {
     private static final double MIN_CALC_COLOR_K = 0.001;
 
     /**
+     * _threads - num of threads
+     */
+    private int _threads = 4;
+    /**
+     * _print - print percent for debug
+     */
+    private boolean _print = true;
+
+
+    /**
+     * Pixel class
+     * represent a single pixel
+     * @author avi && daniel
+     */
+    public class Pixel{
+        private long _maxRow = 0;
+        private long _maxCols = 0;
+        private long _pixels = 0;
+        public volatile int row = 0;
+        public volatile int col = -1;
+        private long _counter = 0;
+        private int _percent = 0;
+        private long _nextCounter = 0;
+
+        /**
+         * contractor - gets gets the image params
+         * @param maxRow the nx
+         * @param maxCols the ny
+         */
+        public Pixel(int maxRow, int maxCols){
+            _maxCols = maxCols;
+            _maxRow = maxRow;
+            _pixels = maxCols * maxRow;
+            _nextCounter = _pixels/100;
+            if(Render.this._print)
+                System.out.printf("\r %02d%%", _percent);
+        }
+        /**
+         * default contractor
+         */
+        public Pixel() {}
+
+        /**
+         * Pixel - nextPixel
+         * return true if there is a next pixel
+         */
+        public boolean nextPixel(Pixel target) throws InterruptedException {
+            int percent = nextp(target);
+            if(percent > 0 && Render.this._print) {
+                System.out.printf("\r %02d%%", percent);
+            }
+            if(percent >= 0)
+                return true;
+            if(Render.this._print){
+                System.out.printf("\r %02d%%", 100);
+        }
+            return false;
+        }
+        /**
+         * Pixel - nextP
+         * changing target pixel to the next pixel
+         * return 0 if there is a next pixel, and -1 else
+         */
+        private synchronized int nextp(Pixel target)
+        {
+            col++;
+            _counter++;
+            if(col < _maxCols) {
+                target.row = this.row;
+                target.col = this.col;
+                if(_counter == _nextCounter)
+                {
+                    _percent++;
+                    _nextCounter = _pixels * (_percent + 1) / 100;
+                    return _percent;
+                }
+                return 0;
+            }
+            row++;
+            if(row < _maxRow) {
+                col = 0;
+                if(_counter == _nextCounter)
+                {
+                    _percent++;
+                    _nextCounter = _pixels * (_percent + 1) / 100;
+                    return _percent;
+                }
+                return 0;
+            }
+            return -1;
+        }
+    }
+
+    /**
      * contractor - gets gets the image params
      * @param imageWriter the D2 image
      * @param scene the scene to converts
@@ -43,6 +131,17 @@ public class Render {
     public Render(ImageWriter imageWriter, Scene scene) {
         this.scene = scene;
         this.imageWriter = imageWriter;
+    }
+
+    /**
+     * contractor - gets gets the image params
+     * @param imageWriter the D2 image
+     * @param scene the scene to converts
+     * @param _print for debug printing
+     */
+    public Render(ImageWriter imageWriter, Scene scene, boolean _print) {
+        this(imageWriter, scene);
+        this._print = _print;
     }
 
     /**
@@ -60,7 +159,7 @@ public class Render {
         double width = imageWriter.getWidth();
         double height = imageWriter.getHeight();
 
-        for(int x = 0; x < nX; x++) {
+        /*for(int x = 0; x < nX; x++) {
             for(int y = 0; y < nY; y++) {
                 try {
                     Ray ray = camera.constructRayThroughPixel(nX, nY, x, y, distance, width, height);
@@ -71,7 +170,51 @@ public class Render {
                     throw e;
                 }
             }
+        }*/
+        final Pixel thePixel = new Pixel(nY,nX);
+
+        Thread[] threads = new Thread[_threads];
+        for(int i = 0 ; i<_threads; i++)
+        {
+            threads[i] = new Thread(()->{
+                Pixel pixel = new Pixel();
+                try {
+                    while (thePixel.nextPixel(pixel)) {
+                        Ray ray = null;
+                        try {
+                            ray = camera.constructRayThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height);
+                            GeoPoint closestPoint = findCLosestIntersection(ray);
+                            imageWriter.writePixel(pixel.col, pixel.row, closestPoint == null ? background : calcColor(closestPoint, ray).getColor());
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+                catch (Exception e){}
+            });
+
         }
+
+        for (Thread thread : threads)
+            thread.start();
+
+        for (Thread thread : threads)
+            thread.join();
+
+
+        if(_print)
+            System.out.print("\r100%\n");
+    }
+
+    /**
+     * Pixel - setMultiThreading
+     * set the number of threads
+     */
+    public void setMultiThreading(int threads) {
+        if(threads <= 0)
+            throw new IllegalArgumentException("The thread must be positive number");
+        this._threads = threads;
+
+
     }
 
     /**
@@ -243,18 +386,16 @@ public class Render {
         try {
             Vector fromPointToLightVector = l.scale(-1);
             Ray fromPointToLightRay = new Ray(geopoint.point, fromPointToLightVector, n);
-            List<GeoPoint> intersections = scene.get_geometries().findIntersections(fromPointToLightRay);
+            double lightDistance = lightSource.getDistance(geopoint.point);
+            List<GeoPoint> intersections = scene.get_geometries().findIntersections(fromPointToLightRay, lightDistance);
             if(intersections==null || intersections.size() == 0)
                 return 1;
 
-            double lightDistance = lightSource.getDistance(geopoint.point);
             double ktr = 1.0;
             for (GeoPoint gp : intersections) {
-                if (alignZero(gp.point.distance(geopoint.point) - lightDistance) <= 0) {
                     ktr *= gp.geometry.get_material().get_KT();
                     if (ktr < MIN_CALC_COLOR_K)
                         return 0.0;
-                }
             }
             return ktr;
         }
