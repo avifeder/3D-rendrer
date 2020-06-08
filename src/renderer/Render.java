@@ -32,16 +32,18 @@ public class Render {
     /**
      * _threads - num of threads
      */
-    private int _threads = 4;
+    private int _threads = 3;
     /**
      * _print - print percent for debug
      */
     private boolean _print = true;
 
+    private int numOfRays = 30;
 
     /**
      * Pixel class
      * represent a single pixel
+     * internal class to help the multi threads functions
      * @author avi && daniel
      */
     public class Pixel{
@@ -88,6 +90,7 @@ public class Render {
         }
             return false;
         }
+
         /**
          * Pixel - nextP
          * changing target pixel to the next pixel
@@ -159,48 +162,37 @@ public class Render {
         double width = imageWriter.getWidth();
         double height = imageWriter.getHeight();
 
-        /*for(int x = 0; x < nX; x++) {
-            for(int y = 0; y < nY; y++) {
-                try {
-                    Ray ray = camera.constructRayThroughPixel(nX, nY, x, y, distance, width, height);
-                    GeoPoint closestPoint = findCLosestIntersection(ray);
-                    imageWriter.writePixel(x, y, closestPoint == null? background:calcColor(closestPoint, ray).getColor());
-                    }
-                catch (Exception e){
-                    throw e;
-                }
-            }
-        }*/
+        //Multi threads for calculating pixel color
         final Pixel thePixel = new Pixel(nY,nX);
-
         Thread[] threads = new Thread[_threads];
         for(int i = 0 ; i<_threads; i++)
         {
             threads[i] = new Thread(()->{
                 Pixel pixel = new Pixel();
                 try {
+                    //while there is a pixel that is not processed by a thread
                     while (thePixel.nextPixel(pixel)) {
-                        Ray ray = null;
+                        List<Ray> rays = null;
                         try {
-                            ray = camera.constructRayThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height);
-                            GeoPoint closestPoint = findCLosestIntersection(ray);
-                            imageWriter.writePixel(pixel.col, pixel.row, closestPoint == null ? background : calcColor(closestPoint, ray).getColor());
+                            rays = camera.constructRaysThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height, numOfRays);
+                            imageWriter.writePixel(pixel.col, pixel.row, calcColor(rays).getColor());
                         } catch (Exception e) {
                         }
                     }
                 }
                 catch (Exception e){}
             });
-
         }
 
+        //starts all threads
         for (Thread thread : threads)
             thread.start();
 
+        //Wait for all threads to finish
         for (Thread thread : threads)
             thread.join();
 
-
+        //finish to create the image
         if(_print)
             System.out.print("\r100%\n");
     }
@@ -215,6 +207,14 @@ public class Render {
         this._threads = threads;
 
 
+    }
+
+    /**
+     * numOfRays - setNumOfRays
+     * set the number of rays in each pixel
+     */
+    public void setNumOfRays(int numOfRays) {
+        this.numOfRays = numOfRays;
     }
 
     /**
@@ -279,13 +279,13 @@ public class Render {
             double kr = material.get_KR(), kkr = k*kr;
             if(kkr > MIN_CALC_COLOR_K) {
                 Ray reflectedRay = constructReflectedRay(n, p.point,ray);
-                GeoPoint gp = findCLosestIntersection(reflectedRay);
+                GeoPoint gp = findClosestIntersection(reflectedRay);
                 color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, reflectedRay, level -1, kkr).scale(kr));
             }
             double kt = material.get_KT(), kkt = k*kt;
             if(kkt > MIN_CALC_COLOR_K) {
                 Ray refractedRay = constructRefractedRay(n, p.point,ray);
-                GeoPoint gp = findCLosestIntersection(refractedRay);
+                GeoPoint gp = findClosestIntersection(refractedRay);
                 color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, refractedRay, level -1, kkt).scale(kt));
             }
             return color;
@@ -295,8 +295,34 @@ public class Render {
             return p.geometry.get_emmission();
         }
     }
+
+    /**
+     * calcColor - return the color in a point
+     * @param gp point
+     * @param ray intersection point
+     * @return the color intensity in the point
+     */
     private primitives.Color calcColor(GeoPoint gp, Ray ray){
         return calcColor(gp, ray, MAX_CALC_COLOR_LEVEL, 1d).add(scene.get_ambientLight().get_intensity());
+    }
+
+    /**
+     * calcColor - return the average color in a pixel
+     * @param rays list of rays throw pixel
+     * @return the color intensity in the point
+     */
+    private primitives.Color calcColor(List<Ray> rays) throws Exception {
+        primitives.Color color = primitives.Color.BLACK;
+        GeoPoint gp;
+        for(Ray ray : rays)
+        {
+            gp = findClosestIntersection(ray);
+            if(gp == null)
+                color = color.add(this.scene.get_background());
+            else
+                color = color.add(calcColor(gp, ray));
+        }
+        return color.reduce(rays.size());
     }
 
     /**
@@ -337,6 +363,7 @@ public class Render {
             nl = -nl;
         return ip.scale(nl * kd);
     }
+
     /**
      * getClosestPoint - calculate the closest intersection point
      * @param points list of Point3D intersection point's
@@ -354,11 +381,12 @@ public class Render {
         }
         return closestPoint;
     }
+
     /**
      * unshaded -cheak if an intersection point need to be shadow or not
      * @param l direction from light to point
      * @param n normal to the point
-     * @param gp the point we cheak for shadow
+     * @param gp the point we check for shadow
      * @param lightSource the light source
      * @return true if its an intersection point need to be unshadow
      */
@@ -366,8 +394,8 @@ public class Render {
         try {
             Vector fromPointToLightVector = l.scale(-1);
             Ray fromPointToLightRay = new Ray(gp.point, fromPointToLightVector, n);
-            List<GeoPoint> intrsection = scene.get_geometries().findIntersections(fromPointToLightRay, lightSource.getDistance(gp.point));
-            return intrsection==null || intrsection.size() == 0;
+            List<GeoPoint> intersection = scene.get_geometries().findIntersections(fromPointToLightRay, lightSource.getDistance(gp.point));
+            return intersection==null || intersection.size() == 0;
         }
         catch (Exception e){
             return true;
@@ -375,12 +403,12 @@ public class Render {
     }
 
     /**
-     * unshaded -cheak if an intersection point need to be shadow or not
+     * transparency -check if an intersection point need to be shadow or not
      * @param l direction from light to point
      * @param n normal to the point
-     * @param geopoint the point we cheak for shadow
+     * @param geopoint the point we check for shadow
      * @param lightSource the light source
-     * @return true if its an intersection point need to be unshadow
+     * @return shadow strength
      */
     private double transparency(Vector l, Vector n, GeoPoint geopoint, LightSource lightSource){
         try {
@@ -393,7 +421,7 @@ public class Render {
 
             double ktr = 1.0;
             for (GeoPoint gp : intersections) {
-                    ktr *= gp.geometry.get_material().get_KT();
+                    ktr *= gp.geometry.get_material().get_KT();// kt - transparency
                     if (ktr < MIN_CALC_COLOR_K)
                         return 0.0;
             }
@@ -417,6 +445,7 @@ public class Render {
         Vector ref = v.add(n.scale(-2*nv));
         return new Ray(point, ref, n);
     }
+
     /**
      * contract Refracted Ray
      * @param n normal to point
@@ -427,11 +456,12 @@ public class Render {
     {
         return new Ray(point, ray.get_vector(), n);
     }
+
     /**
-     * findCLosestIntersection - find the closest point to the ray head
+     * findClosestIntersection - find the closest point to the ray head
      * @param ray, the ray we wants his closest point
      */
-    private GeoPoint findCLosestIntersection(Ray ray)throws Exception{
+    private GeoPoint findClosestIntersection(Ray ray)throws Exception{
         List<GeoPoint> points = scene.get_geometries().findIntersections(ray);
         if(points == null)
             return null;
