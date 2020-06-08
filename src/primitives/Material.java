@@ -8,8 +8,8 @@ package primitives;
 public class Material {
     double _kD;
     double _kS;
-    double _KT;
-    double _KR;
+    double _KT; //transparency
+    double _KR; //reflection
     int _nShininess;
 
     /**

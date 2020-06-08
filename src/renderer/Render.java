@@ -111,6 +111,7 @@ public class Render {
                 }
                 return 0;
             }
+
             row++;
             if(row < _maxRow) {
                 col = 0;
@@ -256,33 +257,36 @@ public class Render {
             Vector v = p.point.subtract(scene.get_camera().getLocation()).normalize();
             Vector n = p.geometry.getNormal(p.point);
             double nv = alignZero(n.dotProduct(v));
+            //if n is orthogonal to v
             if(nv == 0)
                 return color;
             Material material = p.geometry.get_material();
             int nShininess = material.get_nShininess();
-            double kd = material.get_kD();
-            double ks = material.get_kS();
+            double kd = material.get_kD();// level of diffusive
+            double ks = material.get_kS();// level of specular
             for (LightSource lightSource : scene.get_lights()){
                 Vector l = lightSource.getL(p.point);
                 double nl = alignZero(n.dotProduct(l));
-                //if((nl>0 && nv>0) || (nl<0 && nv<0))
                 if(nl*nv>0)
                 {
-                   // if(unshaded(l, n, p, lightSource)){
-                        double ktr = transparency(l, n, p, lightSource);
-                         primitives.Color ip =lightSource.getIntensity(p.point).scale(ktr);
-                         color = color.add(calcDiffusive(kd, nl, ip), calcSpecular(ks, l, n, nl, v, nShininess, ip));
-                    //}
+                    double ktr = transparency(l, n, p, lightSource);// level of shadow
+                    primitives.Color ip =lightSource.getIntensity(p.point).scale(ktr);
+                    color = color.add(calcDiffusive(kd, nl, ip), calcSpecular(ks, l, n, nl, v, nShininess, ip));
                 }
             }
 
-            double kr = material.get_KR(), kkr = k*kr;
+            //reflection calculate
+            double kr = material.get_KR();
+            double kkr = k*kr;
             if(kkr > MIN_CALC_COLOR_K) {
                 Ray reflectedRay = constructReflectedRay(n, p.point,ray);
                 GeoPoint gp = findClosestIntersection(reflectedRay);
                 color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, reflectedRay, level -1, kkr).scale(kr));
             }
-            double kt = material.get_KT(), kkt = k*kt;
+
+            //transparency calculate
+            double kt = material.get_KT();
+            double kkt = k*kt;
             if(kkt > MIN_CALC_COLOR_K) {
                 Ray refractedRay = constructRefractedRay(n, p.point,ray);
                 GeoPoint gp = findClosestIntersection(refractedRay);
