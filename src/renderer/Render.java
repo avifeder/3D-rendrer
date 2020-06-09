@@ -38,7 +38,7 @@ public class Render {
      */
     private boolean _print = true;
 
-    private int numOfRays = 30;
+    private int numOfRays = 2;
 
     /**
      * Pixel class

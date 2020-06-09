@@ -147,31 +147,25 @@ public class ReflectionRefractionTests {
     @Test
     public void bonusMultiShapes()throws Exception {
         Scene scene = new Scene("Test scene");
-        scene.set_camera(new Camera(new Point3D(-500, -1500, 0), new Vector(1, 1, 0), new Vector(0, 0, 1)));
-        scene.set_distance(200);
-        scene.set_background(new Color(java.awt.Color.BLACK));
+        scene.set_camera(new Camera(new Point3D(0, 0, -1000), new Vector(0, 0, 1), new Vector(0, -1, 0)));
+        scene.set_distance(1000);
+        scene.set_background(Color.BLACK);
         scene.set_ambientLight(new AmbientLight(0.15, new Color(java.awt.Color.WHITE)));
+
         scene.addGeometries( //
-                new Triangle(new Color(java.awt.Color.WHITE), new Material(0.5, 0.5, 60, 0.5, 0.5), //
-                        new Point3D(1000, 1000, 0), new Point3D(1000, -1000, 0), new Point3D(1000, 0, 1000)),
-                new Triangle(new Color(java.awt.Color.WHITE), new Material(0.5, 0.5, 60, 0.5, 0.5), //
-                        new Point3D(1000, 1000, 0), new Point3D(1000, -1000, 0), new Point3D(1000, 0, -1000)),
-                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
-                        new Point3D(950, 0, 0)),
-                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
-                        new Point3D(950, 0, -250)),
-                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
-                        new Point3D(950, 0, 250)),
-                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
-                        new Point3D(950, 250, 0)),
-                new Sphere(new Color(java.awt.Color.RED), new Material(0.4, 0.3, 100, 0.4, 0), 30,
-                        new Point3D(950, -250, 0)));
+                new Triangle(Color.BLACK, new Material(0, 0, 0, 0, 1), //
+                        new Point3D(-150, 150, 115), new Point3D(150, 150, 135), new Point3D(75, -75, 150)), //
+                new Triangle(Color.BLACK, new Material(0, 0, 0, 0, 1), //
+                        new Point3D(-150, 150, 115), new Point3D(-70, -70, 140), new Point3D(75, -75, 150)), //
+                new Sphere(new Color(java.awt.Color.BLUE), new Material(0.5, 0.5, 30, 0.5, 0.5), // )
+                        20, new Point3D(0, 0, -40)),
+                new Sphere(new Color(java.awt.Color.green).reduce(3), new Material(0, 0, 30, 0.5, 0.5), // )
+                        23, new Point3D(50, 0, -40)));
 
-        scene.addLights(
-                new SpotLight(new Color(java.awt.Color.WHITE), new Point3D(0, 0, 0), new Vector(1, 0, 0), 1,
-                        0.0004, 0.0000006));
+        scene.addLights(new SpotLight(new Color(700, 400, 400), //
+                new Point3D(40, -40, -115), new Vector(-1, 1, 4), 1, 4E-4, 2E-5));
 
-        ImageWriter imageWriter = new ImageWriter("bonus 10 shapes", 200, 200, 600, 600);
+        ImageWriter imageWriter = new ImageWriter("our test", 200, 200, 600, 600);
         Render render = new Render(imageWriter, scene);
 
         render.renderImage();
