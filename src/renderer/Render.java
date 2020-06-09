@@ -69,6 +69,7 @@ public class Render {
             if(Render.this._print)
                 System.out.printf("\r %02d%%", _percent);
         }
+
         /**
          * default contractor
          */
@@ -267,7 +268,7 @@ public class Render {
             for (LightSource lightSource : scene.get_lights()){
                 Vector l = lightSource.getL(p.point);
                 double nl = alignZero(n.dotProduct(l));
-                if(nl*nv>0)
+                if(nl*nv>0)//if the camera can see
                 {
                     double ktr = transparency(l, n, p, lightSource);// level of shadow
                     primitives.Color ip =lightSource.getIntensity(p.point).scale(ktr);
