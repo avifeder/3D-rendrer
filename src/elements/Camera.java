@@ -121,9 +121,9 @@ public class Camera {
         double Xj= (j - (nX/2d))*Rx + Rx/2d;
         if(Xj != 0) Pij = Pij.add(this._Vright.scale(-Xj)) ;
         if(Yi != 0) Pij = Pij.add(this._Vup.scale(-Yi)) ;
+
         double PRy = Ry/numOfRaysInRowCol;
         double PRx = Rx/numOfRaysInRowCol;
-
         List rays = new LinkedList<Ray>();
 
         //the center of the pixel

@@ -11,6 +11,7 @@ public class Material {
     double _KT; //transparency
     double _KR; //reflection
     int _nShininess;
+    double _DiffusedAndGlossy = 0.0001;// size of diffused and glossy grid
 
     /**
      * constructor of Material class
@@ -40,6 +41,21 @@ public class Material {
     }
 
     /**
+     * constructor of Material class
+     * @param _kD gets the kD
+     * @param _kS gets the kS
+     * @param _KT gets the kT
+     * @param _KR gets the KR
+     * @param _nShininess gets the nShininess
+     * @param _DiffusedAndGlossy gets the _DiffusedAndGlossy
+     */
+    public Material(double _kD, double _kS, int _nShininess, double _KT, double _KR, double _DiffusedAndGlossy) {
+        this(_kD, _kS, _nShininess, _KT, _KR);
+        if(_DiffusedAndGlossy > 0)
+            this._DiffusedAndGlossy = _DiffusedAndGlossy;
+
+    }
+    /**
      * @return the kD
      */
     public double get_kD() {
@@ -65,6 +81,11 @@ public class Material {
     public double get_KT() {
         return _KT;
     }
+
+    public double get_DiffusedAndGlossy() {
+        return _DiffusedAndGlossy;
+    }
+
     /**
      * @return the kr
      */

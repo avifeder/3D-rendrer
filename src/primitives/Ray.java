@@ -57,7 +57,7 @@ public class Ray {
     {
         Vector deltaVector = n.scale(n.dotProduct(vector) > 0 ? DELTA : -DELTA);
         _point = point.add(deltaVector);
-        _vector = vector;
+        _vector = vector.normalized();
     }
 
     @Override

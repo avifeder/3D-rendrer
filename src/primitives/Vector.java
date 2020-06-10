@@ -188,4 +188,19 @@ public class Vector {
             return true;
         return false;
     }
+
+    /**
+     * find Random Orthogonal func
+     * return an orthogonal vector
+     */
+    public Vector findRandomOrthogonal() throws Exception {
+        double x = this.getPoint().get_x().get();
+        double y = this.getPoint().get_y().get();
+        double z = this.getPoint().get_z().get();
+        double Ax= Math.abs(x), Ay= Math.abs(y), Az= Math.abs(z);
+        if (Ax < Ay)
+            return Ax < Az ?  new Vector(0, -z, y) : new Vector(-y, x, 0);
+        else
+            return Ay < Az ?  new Vector(z, 0, -x) : new Vector(-y, x, 0);
+    }
 }

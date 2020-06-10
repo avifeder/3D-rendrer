@@ -5,6 +5,7 @@ import geometries.Intersectable;
 import primitives.*;
 import scene.Scene;
 import java.awt.Color;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -23,7 +24,7 @@ public class Render {
     /**
      * MAX_CALC_COLOR_LEVEL - maximum level in the recursion three
      */
-    private static final int MAX_CALC_COLOR_LEVEL = 10;
+    private static final int MAX_CALC_COLOR_LEVEL = 5;
     /**
      * MIN_CALC_COLOR_K - stopping calculate color at this value of k
      */
@@ -38,7 +39,20 @@ public class Render {
      */
     private boolean _print = true;
 
-    private int numOfRays = 2;
+    /**
+     * numOfRaysForSuperSampling - number of rays for super sampling
+     */
+    private int numOfRaysForSuperSampling = 1;
+
+    /**
+     * Multiple reflection and refraction rays
+     * distanceOfGrid - the distance between the object and the grid for reflection and refraction
+     * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
+     */
+    private double distanceForDiffusedAndGlossy = 100;
+    private int numOfRaysForDiffusedAndGlossy = 50;
+
+
 
     /**
      * Pixel class
@@ -82,12 +96,12 @@ public class Render {
         public boolean nextPixel(Pixel target) throws InterruptedException {
             int percent = nextp(target);
             if(percent > 0 && Render.this._print) {
-                System.out.printf("\r %02d%%", percent);
+                synchronized(System.out){System.out.printf("\r %02d%%", percent);};
             }
             if(percent >= 0)
                 return true;
             if(Render.this._print){
-                System.out.printf("\r %02d%%", 100);
+                synchronized(System.out){System.out.printf("\r %02d%%", 100);};
         }
             return false;
         }
@@ -176,7 +190,7 @@ public class Render {
                     while (thePixel.nextPixel(pixel)) {
                         List<Ray> rays = null;
                         try {
-                            rays = camera.constructRaysThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height, numOfRays);
+                            rays = camera.constructRaysThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height, numOfRaysForSuperSampling);
                             imageWriter.writePixel(pixel.col, pixel.row, calcColor(rays).getColor());
                         } catch (Exception e) {
                         }
@@ -215,8 +229,8 @@ public class Render {
      * numOfRays - setNumOfRays
      * set the number of rays in each pixel
      */
-    public void setNumOfRays(int numOfRays) {
-        this.numOfRays = numOfRays;
+    public void setNumOfRaysForSuperSampling(int numOfRaysForSuperSampling) {
+        this.numOfRaysForSuperSampling = numOfRaysForSuperSampling;
     }
 
     /**
@@ -280,18 +294,33 @@ public class Render {
             double kr = material.get_KR();
             double kkr = k*kr;
             if(kkr > MIN_CALC_COLOR_K) {
-                Ray reflectedRay = constructReflectedRay(n, p.point,ray);
-                GeoPoint gp = findClosestIntersection(reflectedRay);
-                color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, reflectedRay, level -1, kkr).scale(kr));
+
+                List<Ray> reflectedRays = constructReflectedRays(n, p.point,ray, material.get_DiffusedAndGlossy());
+                primitives.Color tempColor1 = primitives.Color.BLACK;
+                //calculate for each ray
+                for(Ray reflectedRay: reflectedRays)
+                {
+                    GeoPoint gp = findClosestIntersection(reflectedRay);
+                    tempColor1 = tempColor1.add(gp == null ? primitives.Color.BLACK : calcColor(gp, reflectedRay, level - 1, kkr).scale(kr));
+                }
+                color = color.add(tempColor1.reduce(reflectedRays.size()));
+
             }
 
             //transparency calculate
             double kt = material.get_KT();
             double kkt = k*kt;
             if(kkt > MIN_CALC_COLOR_K) {
-                Ray refractedRay = constructRefractedRay(n, p.point,ray);
-                GeoPoint gp = findClosestIntersection(refractedRay);
-                color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, refractedRay, level -1, kkt).scale(kt));
+                List<Ray> refractedRays = constructRefractedRays(n, p.point,ray, material.get_DiffusedAndGlossy());
+                primitives.Color tempColor2 = primitives.Color.BLACK;
+                //calculate for each ray
+                for(Ray refractedRay: refractedRays)
+                {
+                    GeoPoint gp = findClosestIntersection(refractedRay);
+                    tempColor2 = tempColor2.add(gp == null? primitives.Color.BLACK : calcColor(gp, refractedRay, level -1, kkt).scale(kt));
+                }
+                color = color.add(tempColor2.reduce(refractedRays.size()));
+                //color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, refractedRay, level -1, kkt).scale(kt));
             }
             return color;
         }
@@ -443,12 +472,12 @@ public class Render {
      * @param point, the intersection point
      * @param ray, the ray we wants his reflected ray
      */
-    private Ray constructReflectedRay(Vector n, Point3D point, Ray ray) throws Exception
+    private List<Ray> constructReflectedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception
     {
         double nv = ray.get_vector().dotProduct(n);
         Vector v = ray.get_vector();
         Vector ref = v.add(n.scale(-2*nv));
-        return new Ray(point, ref, n);
+        return RaysOfGride(n, point, ref, -1, DiffusedAndGlossy);
     }
 
     /**
@@ -457,9 +486,49 @@ public class Render {
      * @param point, the intersection point
      * @param ray, the ray we wants his refracted ray
      */
-    private Ray constructRefractedRay(Vector n, Point3D point, Ray ray) throws Exception
+    private List<Ray> constructRefractedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception
     {
-        return new Ray(point, ray.get_vector(), n);
+        return RaysOfGride(n, point, ray.get_vector(), 1, DiffusedAndGlossy);
+    }
+
+    /**
+     * calculate the rays that cross the grid of refraction and reflection
+     * @param n normal to point
+     * @param point the intersection point
+     * @param Vto the direction of the main ray
+     * @param direction 1 for refraction, -1 for reflection
+     * @return list of rays that cross the grid
+     */
+    private List<Ray> RaysOfGride(Vector n, Point3D point, Vector Vto, int direction, double DiffusedAndGlossy) throws Exception {
+        if(direction != 1 && direction != -1)
+            throw new IllegalArgumentException("direction must be 1 or -1");
+        double gridSize = DiffusedAndGlossy;
+        int numOfRowCol = (int)Math.ceil(Math.sqrt(numOfRaysForDiffusedAndGlossy));
+        Vector Vup = Vto.findRandomOrthogonal();//vector in the grid
+        Vector Vright = Vto.crossProduct(Vup);//vector in the grid
+        Point3D Pij = point.add(Vto.scale(distanceForDiffusedAndGlossy)); // center point of the grid
+        double sizeOfCube = gridSize/numOfRowCol;//size of each cube in the grid
+        List rays = new LinkedList<Ray>();
+        n = n.dotProduct(Vto) > 0 ? n.scale(-direction) : n.scale(direction);//fix the normal direction
+
+        Point3D tempPij = Pij;//save the center of the grid
+        Vector tempRayVector;
+        for (int r = 0; r < numOfRowCol; r++){
+            double PXj= (r - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
+            for(int c = 0; c < numOfRowCol; c++)
+            {
+                double PYi= (c - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
+                if(PXj != 0) Pij = Pij.add(Vright.scale(-PXj)) ;
+                if(PYi != 0) Pij = Pij.add(Vup.scale(-PYi)) ;
+                tempRayVector = Pij.subtract(point);
+                if(n.dotProduct(tempRayVector) < 0 && direction == 1) //refraction
+                    rays.add(new Ray(point, tempRayVector, n));
+                if(n.dotProduct(tempRayVector) > 0 && direction == -1) //reflection
+                    rays.add(new Ray(point, tempRayVector, n));
+                Pij = tempPij;
+            }
+        }
+        return rays;
     }
 
     /**
@@ -478,4 +547,21 @@ public class Render {
         }
         return closestPoint;
     }
+
+    /**
+     * set distance of grid
+     * set the distance between the object and the grid for reflection and refraction
+     */
+    public void setDistanceForDiffusedAndGlossy(double distanceForDiffusedAndGlossy) {
+        this.distanceForDiffusedAndGlossy = distanceForDiffusedAndGlossy;
+    }
+
+    /**
+     * set num of rays
+     * set the number of rays for reflection and refraction
+     */
+    public void setNumOfRaysForDiffusedAndGlossy(int numOfRaysForDiffusedAndGlossy) {
+        this.numOfRaysForDiffusedAndGlossy = numOfRaysForDiffusedAndGlossy;
+    }
+
 }
