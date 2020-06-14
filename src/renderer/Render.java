@@ -11,6 +11,7 @@ import java.util.List;
 
 import geometries.Intersectable.GeoPoint;
 import static primitives.Util.alignZero;
+import static primitives.Util.isZero;
 
 /**
  * Render class
@@ -477,7 +478,7 @@ public class Render {
         double nv = ray.get_vector().dotProduct(n);
         Vector v = ray.get_vector();
         Vector ref = v.add(n.scale(-2*nv));
-        return RaysOfGride(n, point, ref, -1, DiffusedAndGlossy);
+        return RaysOfGrid(n, point, ref, -1, DiffusedAndGlossy);
     }
 
     /**
@@ -488,7 +489,7 @@ public class Render {
      */
     private List<Ray> constructRefractedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception
     {
-        return RaysOfGride(n, point, ray.get_vector(), 1, DiffusedAndGlossy);
+        return RaysOfGrid(n, point, ray.get_vector(), 1, DiffusedAndGlossy);
     }
 
     /**
@@ -499,7 +500,7 @@ public class Render {
      * @param direction 1 for refraction, -1 for reflection
      * @return list of rays that cross the grid
      */
-    private List<Ray> RaysOfGride(Vector n, Point3D point, Vector Vto, int direction, double DiffusedAndGlossy) throws Exception {
+    private List<Ray> RaysOfGrid(Vector n, Point3D point, Vector Vto, int direction, double DiffusedAndGlossy) throws Exception {
         if(direction != 1 && direction != -1)
             throw new IllegalArgumentException("direction must be 1 or -1");
         double gridSize = DiffusedAndGlossy;
@@ -507,7 +508,7 @@ public class Render {
         Vector Vup = Vto.findRandomOrthogonal();//vector in the grid
         Vector Vright = Vto.crossProduct(Vup);//vector in the grid
         Point3D Pij = point.add(Vto.scale(distanceForDiffusedAndGlossy)); // center point of the grid
-        double sizeOfCube = gridSize/numOfRowCol;//size of each cube in the grid
+        double sizeOfCube = isZero(gridSize)? 1: gridSize/numOfRowCol;//size of each cube in the grid
         List rays = new LinkedList<Ray>();
         n = n.dotProduct(Vto) > 0 ? n.scale(-direction) : n.scale(direction);//fix the normal direction
 
