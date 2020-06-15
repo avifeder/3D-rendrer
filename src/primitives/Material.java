@@ -11,7 +11,7 @@ public class Material {
     double _KT; //transparency
     double _KR; //reflection
     int _nShininess;
-    double _DiffusedAndGlossy = 0.0001;// size of diffused and glossy grid
+    double _DiffusedAndGlossy = 0;// size of diffused and glossy grid
 
     /**
      * constructor of Material class

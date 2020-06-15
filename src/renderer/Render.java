@@ -51,7 +51,7 @@ public class Render {
      * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
      */
     private double distanceForDiffusedAndGlossy = 100;
-    private int numOfRaysForDiffusedAndGlossy = 50;
+    private int numOfRaysForDiffusedAndGlossy = 36;
 
 
 
@@ -418,12 +418,12 @@ public class Render {
     }
 
     /**
-     * unshaded -cheak if an intersection point need to be shadow or not
+     * unshaded - check if an intersection point need to be shadow or not
      * @param l direction from light to point
      * @param n normal to the point
      * @param gp the point we check for shadow
      * @param lightSource the light source
-     * @return true if its an intersection point need to be unshadow
+     * @return true if its an intersection point need to be unshaded
      */
     private boolean unshaded(Vector l, Vector n, GeoPoint gp, LightSource lightSource){
         try {
@@ -504,29 +504,28 @@ public class Render {
         if(direction != 1 && direction != -1)
             throw new IllegalArgumentException("direction must be 1 or -1");
         double gridSize = DiffusedAndGlossy;
-        int numOfRowCol = (int)Math.ceil(Math.sqrt(numOfRaysForDiffusedAndGlossy));
+        int numOfRowCol = isZero(gridSize)? 1: (int)Math.ceil(Math.sqrt(numOfRaysForDiffusedAndGlossy));
         Vector Vup = Vto.findRandomOrthogonal();//vector in the grid
         Vector Vright = Vto.crossProduct(Vup);//vector in the grid
-        Point3D Pij = point.add(Vto.scale(distanceForDiffusedAndGlossy)); // center point of the grid
-        double sizeOfCube = isZero(gridSize)? 1: gridSize/numOfRowCol;//size of each cube in the grid
+        Point3D centerOfGrid = point.add(Vto.scale(distanceForDiffusedAndGlossy)); // center point of the grid
+        double sizeOfCube = gridSize/numOfRowCol;//size of each cube in the grid
         List rays = new LinkedList<Ray>();
         n = n.dotProduct(Vto) > 0 ? n.scale(-direction) : n.scale(direction);//fix the normal direction
-
-        Point3D tempPij = Pij;//save the center of the grid
+        Point3D tempcenterOfGrid = centerOfGrid;//save the center of the grid
         Vector tempRayVector;
-        for (int r = 0; r < numOfRowCol; r++){
-            double PXj= (r - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
-            for(int c = 0; c < numOfRowCol; c++)
+        for (int row = 0; row < numOfRowCol; row++){
+            double xAsixChange= (row - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
+            for(int col = 0; col < numOfRowCol; col++)
             {
-                double PYi= (c - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
-                if(PXj != 0) Pij = Pij.add(Vright.scale(-PXj)) ;
-                if(PYi != 0) Pij = Pij.add(Vup.scale(-PYi)) ;
-                tempRayVector = Pij.subtract(point);
+                double yAsixChange= (col - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
+                if(xAsixChange != 0) centerOfGrid = centerOfGrid.add(Vright.scale(-xAsixChange)) ;
+                if(yAsixChange != 0) centerOfGrid = centerOfGrid.add(Vup.scale(-yAsixChange)) ;
+                tempRayVector = centerOfGrid.subtract(point);
                 if(n.dotProduct(tempRayVector) < 0 && direction == 1) //refraction
                     rays.add(new Ray(point, tempRayVector, n));
                 if(n.dotProduct(tempRayVector) > 0 && direction == -1) //reflection
                     rays.add(new Ray(point, tempRayVector, n));
-                Pij = tempPij;
+                centerOfGrid = tempcenterOfGrid;
             }
         }
         return rays;

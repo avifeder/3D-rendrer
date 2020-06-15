@@ -30,8 +30,9 @@ public class Plane extends Geometry {
      */
     public Plane(Color color,Point3D point, Vector normal)
     {
-        this(point, normal);
-        _emmission = color;
+        super(color);
+        _p = new Point3D(point);
+        _normal = new Vector(normal);
     }
 
     /**
@@ -39,8 +40,9 @@ public class Plane extends Geometry {
      */
     public Plane(Color color, Material material,Point3D point, Vector normal)
     {
-        this(color, point, normal);
-        _material = material;
+        super(color,material);
+        _p = new Point3D(point);
+        _normal = new Vector(normal);
     }
 
     /**
