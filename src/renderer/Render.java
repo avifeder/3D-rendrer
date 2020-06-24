@@ -25,7 +25,7 @@ public class Render {
     /**
      * MAX_CALC_COLOR_LEVEL - maximum level in the recursion three
      */
-    private static final int MAX_CALC_COLOR_LEVEL = 5;
+    private static final int MAX_CALC_COLOR_LEVEL = 10;
     /**
      * MIN_CALC_COLOR_K - stopping calculate color at this value of k
      */
@@ -51,7 +51,9 @@ public class Render {
      * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
      */
     private double distanceForDiffusedAndGlossy = 100;
-    private int numOfRaysForDiffusedAndGlossy = 36;
+    private int numOfRaysForDiffusedAndGlossy = 1;
+    private boolean AdaptiveSuperSamplingFlag = true;
+
 
 
 
@@ -191,11 +193,18 @@ public class Render {
                     while (thePixel.nextPixel(pixel)) {
                         List<Ray> rays = null;
                         try {
-                            primitives.Color color = AdaptiveSuperSampling(nX, nY, pixel.col, pixel.row, distance, width, height, maxRaysForSuperSampling);
-                            imageWriter.writePixel(pixel.col, pixel.row, color.getColor());
-                            //rays = camera.constructRaysThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height, maxRaysForSuperSampling);
-                            //imageWriter.writePixel(pixel.col, pixel.row, calcColor(rays).getColor());
-                            }
+
+                            if (AdaptiveSuperSamplingFlag)
+                                {
+                                primitives.Color color = AdaptiveSuperSampling(nX, nY, pixel.col, pixel.row, distance, width, height, maxRaysForSuperSampling);
+                                imageWriter.writePixel(pixel.col, pixel.row, color.getColor());
+                                }
+                            else
+                                {
+                                rays = camera.constructRaysThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height, maxRaysForSuperSampling);
+                                imageWriter.writePixel(pixel.col, pixel.row, calcColor(rays).getColor());
+                                }
+                        }
                             catch (Exception e) {}
                     }
                 }
@@ -541,6 +550,8 @@ public class Render {
                 centerOfGrid = tempcenterOfGrid;
             }
         }
+
+
         return rays;
     }
 
@@ -634,16 +645,18 @@ public class Render {
                 centerP3 = centerP.add(Vright.scale(-Width / 4)).add(Vup.scale(-Height / 4)),
                 centerP4 = centerP.add(Vright.scale(-Width / 4)).add(Vup.scale(Height / 4));
 
-        primitives.Color returnColor = primitives.Color.BLACK;
-        returnColor = returnColor.add(  AdaptiveSuperSamplingRec(centerP1, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
-                                        AdaptiveSuperSamplingRec(centerP2, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
-                                        AdaptiveSuperSamplingRec(centerP3, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
-                                        AdaptiveSuperSamplingRec(centerP4, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup)
-        );
 
-        return returnColor.reduce(4);
+
+        return AdaptiveSuperSamplingRec(centerP1, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup).add(
+               AdaptiveSuperSamplingRec(centerP2, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
+               AdaptiveSuperSamplingRec(centerP3, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
+               AdaptiveSuperSamplingRec(centerP4, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup)
+        ).reduce(4);
 
     }
 
+    public void setAdaptiveSuperSamplingFlag(boolean adaptiveSuperSamplingFlag) {
+        AdaptiveSuperSamplingFlag = adaptiveSuperSamplingFlag;
+    }
 
 }
