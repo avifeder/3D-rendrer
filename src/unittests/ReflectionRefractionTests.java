@@ -187,7 +187,7 @@ public class ReflectionRefractionTests {
         scene.set_ambientLight(new AmbientLight(0.1, new Color(0, 0, 0)));
 
         scene.addGeometries(
-                new Sphere(new Color(0, 25, 51),  new Material(0.8, 0.8, 200,0,0.7), 200, new Point3D(-1000, -50, 1600)),
+                new Sphere(new Color(java.awt.Color.RED),  new Material(0.8, 0.8, 200,0,0.7), 200, new Point3D(-1000, -50, 1600)),
                 new Sphere(new Color(0, 25, 51), new Material(0.8, 0.8, 200,0,0.7), 200, new Point3D(1000, -50, 1600)),
                 new Sphere(new Color (0, 25, 51), new Material(0.8, 0.8, 200,0,0.7), 200, new Point3D(0, -50, 1600)),
                 new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0,0.00000001), new Point3D(40, -15, -8200),new Point3D(350, -15, -8200),new Point3D(350, 185, -8200)),
@@ -209,7 +209,7 @@ public class ReflectionRefractionTests {
 
         ImageWriter imageWriter = new ImageWriter("multiMirrorTest", 2500, 2500, 1000, 1000);
         Render render = new Render(imageWriter, scene);
-        //render.setDistanceForDiffusedAndGlossy(5000);
+        render.setDistanceForDiffusedAndGlossy(5000);
         render.renderImage();
         render.writeToImage();
     }

@@ -43,16 +43,16 @@ public class Render {
     /**
      * numOfRaysForSuperSampling - number of rays for super sampling
      */
-    private int maxRaysForSuperSampling = 100;
+    private int maxRaysForSuperSampling = 1;
 
     /**
      * Multiple reflection and refraction rays
      * distanceOfGrid - the distance between the object and the grid for reflection and refraction
      * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
      */
-    private double distanceForDiffusedAndGlossy = 100;
+    private double distanceForDiffusedAndGlossy = 36;
     private int numOfRaysForDiffusedAndGlossy = 1;
-    private boolean AdaptiveSuperSamplingFlag = true;
+    private boolean AdaptiveSuperSamplingFlag = false;
 
 
 
@@ -308,7 +308,7 @@ public class Render {
             double kr = material.get_KR();
             double kkr = k*kr;
             if(kkr > MIN_CALC_COLOR_K) {
-
+                /*
                 List<Ray> reflectedRays = constructReflectedRays(n, p.point,ray, material.get_DiffusedAndGlossy());
                 primitives.Color tempColor1 = primitives.Color.BLACK;
                 //calculate for each ray
@@ -318,13 +318,18 @@ public class Render {
                     tempColor1 = tempColor1.add(gp == null ? primitives.Color.BLACK : calcColor(gp, reflectedRay, level - 1, kkr).scale(kr));
                 }
                 color = color.add(tempColor1.reduce(reflectedRays.size()));
-
+                */
+                double nv1 = ray.get_vector().dotProduct(n);
+                Vector v1 = ray.get_vector();
+                Vector ref = v1.add(n.scale(-2*nv1));
+                color = color.add(AdaptiveDiffusedAndGlossy(n,p.point,ref,-1, material.get_DiffusedAndGlossy(),level,kkr,kr));
             }
 
             //transparency calculate
             double kt = material.get_KT();
             double kkt = k*kt;
             if(kkt > MIN_CALC_COLOR_K) {
+                /*
                 List<Ray> refractedRays = constructRefractedRays(n, p.point,ray, material.get_DiffusedAndGlossy());
                 primitives.Color tempColor2 = primitives.Color.BLACK;
                 //calculate for each ray
@@ -334,7 +339,8 @@ public class Render {
                     tempColor2 = tempColor2.add(gp == null? primitives.Color.BLACK : calcColor(gp, refractedRay, level -1, kkt).scale(kt));
                 }
                 color = color.add(tempColor2.reduce(refractedRays.size()));
-                //color = color.add(gp == null? primitives.Color.BLACK : calcColor(gp, refractedRay, level -1, kkt).scale(kt));
+                */
+                color = color.add(AdaptiveDiffusedAndGlossy(n,p.point,ray.get_vector(),1, material.get_DiffusedAndGlossy(),level,kkt,kt));
             }
             return color;
         }
@@ -511,7 +517,7 @@ public class Render {
      */
     private List<Ray> constructRefractedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception
     {
-        return RaysOfGrid(n, point, ray.get_vector(), 1, DiffusedAndGlossy);
+        return RaysOfGrid(n, point,ray.get_vector(), 1, DiffusedAndGlossy);
     }
 
     /**
@@ -534,6 +540,9 @@ public class Render {
         List rays = new LinkedList<Ray>();
         n = n.dotProduct(Vto) > 0 ? n.scale(-direction) : n.scale(direction);//fix the normal direction
         Point3D tempcenterOfGrid = centerOfGrid;//save the center of the grid
+
+
+
         Vector tempRayVector;
         for (int row = 0; row < numOfRowCol; row++){
             double xAsixChange= (row - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
@@ -550,7 +559,6 @@ public class Render {
                 centerOfGrid = tempcenterOfGrid;
             }
         }
-
 
         return rays;
     }
@@ -659,4 +667,81 @@ public class Render {
         AdaptiveSuperSamplingFlag = adaptiveSuperSamplingFlag;
     }
 
+
+    private primitives.Color AdaptiveDiffusedAndGlossy(Vector n, Point3D point, Vector Vto, int direction, double DiffusedAndGlossy, int level , double k, double ktr) throws Exception {
+        if(direction != 1 && direction != -1)
+            throw new IllegalArgumentException("direction must be 1 or -1");
+        double gridSize = DiffusedAndGlossy;
+        int numOfRowCol = isZero(gridSize)? 1: (int)Math.ceil(Math.sqrt(numOfRaysForDiffusedAndGlossy));
+        Vector Vup = Vto.findRandomOrthogonal();//vector in the grid
+        Vector Vright = Vto.crossProduct(Vup);//vector in the grid
+        Point3D centerOfGrid = point.add(Vto.scale(distanceForDiffusedAndGlossy)); // center point of the grid
+        double sizeOfCube = gridSize/numOfRowCol;//size of each cube in the grid
+        List rays = new LinkedList<Ray>();
+        n = n.dotProduct(Vto) > 0 ? n.scale(-direction) : n.scale(direction);//fix the normal direction
+
+        return AdaptiveDiffusedAndGlossyRec(centerOfGrid,gridSize, sizeOfCube, point, Vright, Vup , n ,direction, level,k,ktr);
+    }
+
+    private primitives.Color AdaptiveDiffusedAndGlossyRec(Point3D centerP, double WidthAndHeight, double minCubeSize, Point3D pIntersection,Vector Vright,Vector Vup , Vector normal, int direction, int level , double k, double ktr) throws Exception {
+
+        List<Point3D> centerPList = new LinkedList<Point3D>();
+        List<primitives.Color> colorList = new LinkedList<primitives.Color>();
+        Point3D tempCorner;
+        GeoPoint gp;
+        Ray tempRay;
+        for (int i = -1; i<=1; i += 2)
+            for (int j = -1; j<=1; j += 2)
+            {
+                tempCorner = centerP.add(Vright.scale(i * WidthAndHeight / 2)).add(Vup.scale(j * WidthAndHeight / 2));
+                tempRay = new Ray(pIntersection, tempCorner.subtract(pIntersection), normal);
+                if((normal.dotProduct(tempRay.get_vector()) < 0 && direction == 1) || (normal.dotProduct(tempRay.get_vector()) > 0 && direction == -1))
+                {
+                    centerPList.add(centerP.add(Vright.scale(i * WidthAndHeight / 4)).add(Vup.scale(j * WidthAndHeight / 4)));
+                    gp = findClosestIntersection(tempRay);
+                    if(gp == null)
+                        colorList.add(this.scene.get_background());
+                    else
+                    {
+                        colorList.add(calcColor(gp, tempRay, level-1, k).scale(ktr));
+
+                    }
+
+                }
+            }
+
+        if(centerPList == null || centerPList.size() == 0)
+        {
+            return primitives.Color.BLACK;
+        }
+
+
+        if(WidthAndHeight <= minCubeSize)
+        {
+            primitives.Color sumColor = primitives.Color.BLACK;
+            for(primitives.Color color : colorList)
+            {
+                sumColor = sumColor.add(color);
+            }
+            return sumColor.reduce(colorList.size());
+        }
+
+        boolean isAllEquals = true;
+        primitives.Color tempColor = colorList.get(0);
+        for(primitives.Color color : colorList)
+        {
+            if(!isAlmostEquals(tempColor, color))
+                isAllEquals = false;
+        }
+        if (isAllEquals && colorList.size() > 1)
+            return tempColor;
+
+        tempColor = null;
+        for(Point3D center : centerPList)
+        {
+            tempColor = tempColor.add(AdaptiveDiffusedAndGlossyRec(center, WidthAndHeight/2, minCubeSize , pIntersection, Vright, Vup, normal, direction , level,k, ktr ));
+        }
+        return tempColor.reduce(centerPList.size());
+
+    }
 }
