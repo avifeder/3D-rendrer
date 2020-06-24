@@ -52,7 +52,7 @@ public class Render {
      * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
      */
     private double distanceForDiffusedAndGlossy = 100;
-    private int numOfRaysForDiffusedAndGlossy =1;
+    private int numOfRaysForDiffusedAndGlossy =16;
     private boolean AdaptiveDiffusedAndGlossy = true;
 
 
