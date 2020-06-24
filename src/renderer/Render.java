@@ -10,8 +10,8 @@ import java.util.List;
 
 
 import geometries.Intersectable.GeoPoint;
-import static primitives.Util.alignZero;
-import static primitives.Util.isZero;
+
+import static primitives.Util.*;
 
 /**
  * Render class
@@ -43,7 +43,7 @@ public class Render {
     /**
      * numOfRaysForSuperSampling - number of rays for super sampling
      */
-    private int numOfRaysForSuperSampling = 1;
+    private int maxRaysForSuperSampling = 100;
 
     /**
      * Multiple reflection and refraction rays
@@ -191,10 +191,12 @@ public class Render {
                     while (thePixel.nextPixel(pixel)) {
                         List<Ray> rays = null;
                         try {
-                            rays = camera.constructRaysThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height, numOfRaysForSuperSampling);
-                            imageWriter.writePixel(pixel.col, pixel.row, calcColor(rays).getColor());
-                        } catch (Exception e) {
-                        }
+                            primitives.Color color = AdaptiveSuperSampling(nX, nY, pixel.col, pixel.row, distance, width, height, maxRaysForSuperSampling);
+                            imageWriter.writePixel(pixel.col, pixel.row, color.getColor());
+                            //rays = camera.constructRaysThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height, maxRaysForSuperSampling);
+                            //imageWriter.writePixel(pixel.col, pixel.row, calcColor(rays).getColor());
+                            }
+                            catch (Exception e) {}
                     }
                 }
                 catch (Exception e){}
@@ -212,6 +214,8 @@ public class Render {
         //finish to create the image
         if(_print)
             System.out.print("\r100%\n");
+
+
     }
 
     /**
@@ -230,8 +234,8 @@ public class Render {
      * numOfRays - setNumOfRays
      * set the number of rays in each pixel
      */
-    public void setNumOfRaysForSuperSampling(int numOfRaysForSuperSampling) {
-        this.numOfRaysForSuperSampling = numOfRaysForSuperSampling;
+    public void setMaxRaysForSuperSampling(int maxRaysForSuperSampling) {
+        this.maxRaysForSuperSampling = maxRaysForSuperSampling;
     }
 
     /**
@@ -358,6 +362,15 @@ public class Render {
                 color = color.add(calcColor(gp, ray));
         }
         return color.reduce(rays.size());
+    }
+
+    private primitives.Color calcColor(Ray ray) throws Exception {
+        GeoPoint gp;
+            gp = findClosestIntersection(ray);
+            if(gp == null)
+                return this.scene.get_background();
+            else
+                return calcColor(gp, ray);
     }
 
     /**
@@ -563,5 +576,74 @@ public class Render {
     public void setNumOfRaysForDiffusedAndGlossy(int numOfRaysForDiffusedAndGlossy) {
         this.numOfRaysForDiffusedAndGlossy = numOfRaysForDiffusedAndGlossy;
     }
+
+
+
+    public primitives.Color AdaptiveSuperSampling(int nX, int nY, int j, int i, double screenDistance, double screenWidth, double screenHeight, int numOfRays) throws Exception {
+        Camera camera = scene.get_camera();
+        Vector Vright = camera.getVright();
+        Vector Vup = camera.getVup();
+        Point3D cameraLoc = camera.getLocation();
+        int numOfRaysInRowCol = (int)Math.ceil(Math.sqrt(numOfRays));
+        if(numOfRaysInRowCol == 1)
+            return calcColor(camera.constructRayThroughPixel(nX, nY, j, i, screenDistance, screenWidth,screenHeight));
+        Point3D Pc;
+        if (screenDistance != 0)
+            Pc = cameraLoc.add(camera.getVto().scale(screenDistance));
+        else
+            Pc = cameraLoc;
+        Point3D Pij = Pc;
+        double Ry = screenHeight/nY;
+        double Rx = screenWidth/nX;
+        double Yi= (i - (nY/2d))*Ry + Ry/2d;
+        double Xj= (j - (nX/2d))*Rx + Rx/2d;
+        if(Xj != 0) Pij = Pij.add(Vright.scale(-Xj)) ;
+        if(Yi != 0) Pij = Pij.add(Vup.scale(-Yi)) ;
+        double PRy = Ry/numOfRaysInRowCol;
+        double PRx = Rx/numOfRaysInRowCol;
+        return AdaptiveSuperSamplingRec(Pij, Rx, Ry, PRx, PRy,cameraLoc,Vright, Vup);
+    }
+
+
+    private primitives.Color AdaptiveSuperSamplingRec(Point3D centerP, double Width, double Height, double minWidth, double minHeight, Point3D cameraLoc,Vector Vright,Vector Vup) throws Exception {
+
+        Point3D corner1 = centerP.add(Vright.scale(Width / 2)).add(Vup.scale(-Height / 2)),
+                corner2 = centerP.add(Vright.scale(Width / 2)).add(Vup.scale(Height / 2)),
+                corner3 = centerP.add(Vright.scale(-Width / 2)).add(Vup.scale(-Height / 2)),
+                corner4 = centerP.add(Vright.scale(-Width / 2)).add(Vup.scale(Height / 2));
+
+        Ray     ray1 = new Ray(cameraLoc, corner1.subtract(cameraLoc)),
+                ray2 = new Ray(cameraLoc, corner2.subtract(cameraLoc)),
+                ray3 = new Ray(cameraLoc, corner3.subtract(cameraLoc)),
+                ray4 = new Ray(cameraLoc, corner4.subtract(cameraLoc));
+
+        primitives.Color color1= calcColor(ray1),
+                         color2= calcColor(ray2),
+                         color3= calcColor(ray3),
+                         color4= calcColor(ray4);
+
+        if(Width<=minWidth || Height<=minHeight)
+            return color1.add(color2, color3, color4).reduce(4);
+
+
+        if (isAlmostEquals(color1,color2)&& isAlmostEquals(color1,color3)&& isAlmostEquals(color1,color4))
+            return color1;
+
+        Point3D centerP1 = centerP.add(Vright.scale(Width / 4)).add(Vup.scale(-Height / 4)),
+                centerP2 = centerP.add(Vright.scale(Width / 4)).add(Vup.scale(Height / 4)),
+                centerP3 = centerP.add(Vright.scale(-Width / 4)).add(Vup.scale(-Height / 4)),
+                centerP4 = centerP.add(Vright.scale(-Width / 4)).add(Vup.scale(Height / 4));
+
+        primitives.Color returnColor = primitives.Color.BLACK;
+        returnColor = returnColor.add(  AdaptiveSuperSamplingRec(centerP1, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
+                                        AdaptiveSuperSamplingRec(centerP2, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
+                                        AdaptiveSuperSamplingRec(centerP3, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
+                                        AdaptiveSuperSamplingRec(centerP4, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup)
+        );
+
+        return returnColor.reduce(4);
+
+    }
+
 
 }

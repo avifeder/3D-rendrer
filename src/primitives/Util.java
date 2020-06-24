@@ -41,4 +41,12 @@ public abstract class Util {
     public static double alignZero(double number) {
         return getExp(number) < ACCURACY ? 0.0 : number;
     }
+
+    public static boolean isAlmostEquals(primitives.Color color1, primitives.Color color2)
+    {
+
+        return  (Math.abs(color1.get_r()-color2.get_r())<= 2) &&
+                (Math.abs(color1.get_b()-color2.get_b())<= 2) &&
+                (Math.abs(color1.get_g()-color2.get_g())<= 2);
+    }
 }

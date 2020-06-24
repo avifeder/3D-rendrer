@@ -15,6 +15,18 @@ public class Color {
      */
     private double _r = 0.0, _g = 0.0, _b = 0.0;
 
+    public double get_r() {
+        return _r;
+    }
+
+    public double get_g() {
+        return _g;
+    }
+
+    public double get_b() {
+        return _b;
+    }
+
     public final static Color BLACK = new Color();
 
     /**
