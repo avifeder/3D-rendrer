@@ -34,7 +34,7 @@ public class Render {
     /**
      * _threads - num of threads
      */
-    private int _threads = 4;
+    private int _threads = 6;
     /**
      * _print - print percent for debug
      */
@@ -43,8 +43,8 @@ public class Render {
     /**
      * numOfRaysForSuperSampling - number of rays for super sampling
      */
-    private int maxRaysForSuperSampling = 1;
-    private boolean AdaptiveSuperSamplingFlag = false;
+    private int maxRaysForSuperSampling = 16;
+    private boolean AdaptiveSuperSamplingFlag = true;
 
     /**
      * Multiple reflection and refraction rays
@@ -52,7 +52,7 @@ public class Render {
      * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
      */
     private double distanceForDiffusedAndGlossy = 100;
-    private int numOfRaysForDiffusedAndGlossy =1;
+    private int numOfRaysForDiffusedAndGlossy = 16;
     private boolean AdaptiveDiffusedAndGlossy = true;
 
 
@@ -223,6 +223,7 @@ public class Render {
         //finish to create the image
         if(_print)
             System.out.print("\r100%\n");
+        System.out.print(counter / (nX * nY));
 
 
     }
@@ -629,46 +630,59 @@ public class Render {
         if(Yi != 0) Pij = Pij.add(Vup.scale(-Yi)) ;
         double PRy = Ry/numOfRaysInRowCol;
         double PRx = Rx/numOfRaysInRowCol;
-        return AdaptiveSuperSamplingRec(Pij, Rx, Ry, PRx, PRy,cameraLoc,Vright, Vup);
+        return AdaptiveSuperSamplingRec(Pij, Rx, Ry, PRx, PRy,cameraLoc,Vright, Vup,null);
     }
 
+private double counter = 0;
+    private primitives.Color AdaptiveSuperSamplingRec(Point3D centerP, double Width, double Height, double minWidth, double minHeight, Point3D cameraLoc,Vector Vright,Vector Vup, List<Point3D> prePoints) throws Exception {
+        List<Point3D> nextCenterPList = new LinkedList<Point3D>();
+        List<Point3D> cornersList = new LinkedList<Point3D>();
+        List<primitives.Color> colorList = new LinkedList<primitives.Color>();
+        Point3D tempCorner;
+        Ray tempRay;
+        for (int i = -1; i <= 1; i += 2){
+            for (int j = -1; j <= 1; j += 2) {
+                tempCorner = centerP.add(Vright.scale(i * Width / 2)).add(Vup.scale(j * Height / 2));
+                cornersList.add(tempCorner);
+                if (prePoints == null || !isInList(prePoints, tempCorner)) {
+                    tempRay = new Ray(cameraLoc, tempCorner.subtract(cameraLoc));
+                    counter++;
+                    nextCenterPList.add(centerP.add(Vright.scale(i * Width / 4)).add(Vup.scale(j * Height / 4)));
+                    colorList.add(calcColor(tempRay));
+                    }
+                }
+            }
 
-    private primitives.Color AdaptiveSuperSamplingRec(Point3D centerP, double Width, double Height, double minWidth, double minHeight, Point3D cameraLoc,Vector Vright,Vector Vup) throws Exception {
-
-        Point3D corner1 = centerP.add(Vright.scale(Width / 2)).add(Vup.scale(-Height / 2)),
-                corner2 = centerP.add(Vright.scale(Width / 2)).add(Vup.scale(Height / 2)),
-                corner3 = centerP.add(Vright.scale(-Width / 2)).add(Vup.scale(-Height / 2)),
-                corner4 = centerP.add(Vright.scale(-Width / 2)).add(Vup.scale(Height / 2));
-
-        Ray     ray1 = new Ray(cameraLoc, corner1.subtract(cameraLoc)),
-                ray2 = new Ray(cameraLoc, corner2.subtract(cameraLoc)),
-                ray3 = new Ray(cameraLoc, corner3.subtract(cameraLoc)),
-                ray4 = new Ray(cameraLoc, corner4.subtract(cameraLoc));
-
-        primitives.Color color1= calcColor(ray1),
-                         color2= calcColor(ray2),
-                         color3= calcColor(ray3),
-                         color4= calcColor(ray4);
-
-        if(Width < minWidth * 2 || Height < minHeight * 2)
-            return color1.add(color2, color3, color4).reduce(4);
-
-
-        if (isAlmostEquals(color1,color2)&& isAlmostEquals(color1,color3)&& isAlmostEquals(color1,color4))
-            return color1;
-
-        Point3D centerP1 = centerP.add(Vright.scale(Width / 4)).add(Vup.scale(-Height / 4)),
-                centerP2 = centerP.add(Vright.scale(Width / 4)).add(Vup.scale(Height / 4)),
-                centerP3 = centerP.add(Vright.scale(-Width / 4)).add(Vup.scale(-Height / 4)),
-                centerP4 = centerP.add(Vright.scale(-Width / 4)).add(Vup.scale(Height / 4));
+        if (nextCenterPList == null || nextCenterPList.size() == 0) {
+            return primitives.Color.BLACK;
+        }
 
 
+        if (Width < minWidth * 2 || Height < minHeight * 2) {
+            primitives.Color sumColor = primitives.Color.BLACK;
+            for (primitives.Color color : colorList) {
+                sumColor = sumColor.add(color);
+            }
+            return sumColor.reduce(colorList.size());
+        }
 
-        return AdaptiveSuperSamplingRec(centerP1, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup).add(
-               AdaptiveSuperSamplingRec(centerP2, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
-               AdaptiveSuperSamplingRec(centerP3, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup),
-               AdaptiveSuperSamplingRec(centerP4, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup)
-        ).reduce(4);
+
+        boolean isAllEquals = true;
+        primitives.Color tempColor = colorList.get(0);
+        for (primitives.Color color : colorList) {
+            if (!isAlmostEquals(tempColor, color))
+                isAllEquals = false;
+        }
+        if (isAllEquals && colorList.size() > 1)
+            return tempColor;
+
+
+        tempColor = primitives.Color.BLACK;
+        for (Point3D center : nextCenterPList) {
+            tempColor = tempColor.add(AdaptiveSuperSamplingRec(center, Width/2,  Height/2,  minWidth,  minHeight ,  cameraLoc, Vright, Vup, cornersList));
+        }
+        return tempColor.reduce(nextCenterPList.size());
+
 
     }
 
@@ -702,66 +716,76 @@ public class Render {
            }
 
 
-           return AdaptiveDiffusedAndGlossyRec(centerOfGrid, gridSize, sizeOfCube, point, Vright, Vup, n, direction, level, k, ktr);
+           return AdaptiveDiffusedAndGlossyRec(centerOfGrid, gridSize, sizeOfCube, point, Vright, Vup, n, direction, level, k, ktr, null);
        }
        catch (Exception e)
        {
            return null;
        }
     }
-
-    private primitives.Color AdaptiveDiffusedAndGlossyRec(Point3D centerP, double WidthAndHeight, double minCubeSize, Point3D pIntersection,Vector Vright,Vector Vup , Vector normal, int direction, int level , double k, double ktr) throws Exception {
-
-    List<Point3D> centerPList = new LinkedList<Point3D>();
-    List<primitives.Color> colorList = new LinkedList<primitives.Color>();
-    Point3D tempCorner;
-    GeoPoint gp;
-    Ray tempRay;
+    private boolean isInList(List<Point3D> pointslist, Point3D point)
+    {
+        for (Point3D point1 : pointslist) {
+            if(isZero(point.get_x().get() - point1.get_x().get()) && isZero(point.get_y().get() - point1.get_y().get())
+                    && isZero(point.get_z().get() - point1.get_z().get()))
+                return true;
+        }
+        return false;
+    }
+    private primitives.Color AdaptiveDiffusedAndGlossyRec(Point3D centerP, double WidthAndHeight, double minCubeSize, Point3D pIntersection,Vector Vright,Vector Vup , Vector normal, int direction, int level , double k, double ktr, List<Point3D> prePoints) throws Exception {
+        List<Point3D> nextCenterPList = new LinkedList<Point3D>();
+        List<Point3D> cornersList = new LinkedList<Point3D>();
+        List<primitives.Color> colorList = new LinkedList<primitives.Color>();
+        Point3D tempCorner;
+        GeoPoint gp;
+        Ray tempRay;
         for (int i = -1; i <= 1; i += 2)
             for (int j = -1; j <= 1; j += 2) {
                 tempCorner = centerP.add(Vright.scale(i * WidthAndHeight / 2)).add(Vup.scale(j * WidthAndHeight / 2));
-                tempRay = new Ray(pIntersection, tempCorner.subtract(pIntersection), normal);
-                if ((normal.dotProduct(tempRay.get_vector()) < 0 && direction == 1) || (normal.dotProduct(tempRay.get_vector()) > 0 && direction == -1)) {
-                    centerPList.add(centerP.add(Vright.scale(i * WidthAndHeight / 4)).add(Vup.scale(j * WidthAndHeight / 4)));
-                    gp = findClosestIntersection(tempRay);
-                    if (gp == null)
-                        colorList.add(scene.get_background());
-                    else {
-                        colorList.add(calcColor(gp, tempRay, level - 1, k));
-
+                cornersList.add(tempCorner);
+                if (prePoints == null || !isInList(prePoints, tempCorner)) {
+                    tempRay = new Ray(pIntersection, tempCorner.subtract(pIntersection), normal);
+                    if ((normal.dotProduct(tempRay.get_vector()) < 0 && direction == 1) || (normal.dotProduct(tempRay.get_vector()) > 0 && direction == -1)) {
+                        nextCenterPList.add(centerP.add(Vright.scale(i * WidthAndHeight / 4)).add(Vup.scale(j * WidthAndHeight / 4)));
+                        gp = findClosestIntersection(tempRay);
+                        if (gp == null)
+                            colorList.add(scene.get_background());
+                        else {
+                            colorList.add(calcColor(gp, tempRay, level - 1, k));
+                        }
                     }
                 }
             }
 
-    if (centerPList == null || centerPList.size() == 0) {
-        return primitives.Color.BLACK;
-    }
-
-
-    if (WidthAndHeight < minCubeSize * 2 ) {
-        primitives.Color sumColor = primitives.Color.BLACK;
-        for (primitives.Color color : colorList) {
-            sumColor = sumColor.add(color);
+        if (nextCenterPList == null || nextCenterPList.size() == 0) {
+            return primitives.Color.BLACK;
         }
-        return sumColor.reduce(colorList.size());
-    }
 
 
-    boolean isAllEquals = true;
-    primitives.Color tempColor = colorList.get(0);
-    for (primitives.Color color : colorList) {
-        if (!isAlmostEquals(tempColor, color))
-            isAllEquals = false;
-    }
-    if (isAllEquals && colorList.size() > 1)
-        return tempColor;
+        if (WidthAndHeight < minCubeSize * 2) {
+            primitives.Color sumColor = primitives.Color.BLACK;
+            for (primitives.Color color : colorList) {
+                sumColor = sumColor.add(color);
+            }
+            return sumColor.reduce(colorList.size());
+        }
 
 
-    tempColor = primitives.Color.BLACK;
-    for (Point3D center : centerPList) {
-        tempColor = tempColor.add(AdaptiveDiffusedAndGlossyRec(center, WidthAndHeight / 2, minCubeSize, pIntersection, Vright, Vup, normal, direction, level, k, ktr));
-    }
-    return tempColor.reduce(centerPList.size());
+        boolean isAllEquals = true;
+        primitives.Color tempColor = colorList.get(0);
+        for (primitives.Color color : colorList) {
+            if (!isAlmostEquals(tempColor, color))
+                isAllEquals = false;
+        }
+        if (isAllEquals && colorList.size() > 1)
+            return tempColor;
+
+
+        tempColor = primitives.Color.BLACK;
+        for (Point3D center : nextCenterPList) {
+            tempColor = tempColor.add(AdaptiveDiffusedAndGlossyRec(center, WidthAndHeight / 2, minCubeSize, pIntersection, Vright, Vup, normal, direction, level, k, ktr, cornersList));
+        }
+        return tempColor.reduce(nextCenterPList.size());
     }
 
     public void setAdaptiveDiffusedAndGlossy(boolean adaptiveDiffusedAndGlossy) {

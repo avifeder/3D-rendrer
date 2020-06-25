@@ -158,9 +158,9 @@ public class ReflectionRefractionTests {
                 new Sphere(new Color(102, 32, 20), new Material(0.8, 0.8, 200, 0,0.7), 300, new Point3D(0, 500, 700)),
                 new Sphere(new Color(51, 0, 51), new Material(0.8, 0.25, 120, 0, 0.7), 450, new Point3D(1000, 50, 1100)),
                 new Sphere(new Color (63, 120, 77) ,new Material(0.85, 0.25, 700, 0, 0.7), 600, new Point3D(0, -500, 1700)),
-                new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0,30), new Point3D(50, -215, -8200),new Point3D(380, -215, -8200),new Point3D(380, 285, -8200)),
+                new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0,24), new Point3D(50, -215, -8200),new Point3D(380, -215, -8200),new Point3D(380, 285, -8200)),
                 new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0,0), new Point3D(40, -215, -8200),new Point3D(370, 285, -8200),new Point3D(-270, 285, -8200)),
-                new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0, 30), new Point3D(30, -215, -8200),new Point3D(-280, -215, -8200),new Point3D(-280, 285, -8200)),
+                new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0, 24), new Point3D(30, -215, -8200),new Point3D(-280, -215, -8200),new Point3D(-280, 285, -8200)),
                 new Plane(new Color(java.awt.Color.black), new Material(0.4, 0.3, 20000, 0, 0.4,200), new Point3D(1500, 1500, 0),
                         new Point3D(-1500, -1500, 3850), new Point3D(-1500, 1500, 0)));
 
