@@ -110,8 +110,15 @@ public class Point3D {
                 Objects.equals(get_z(), point3D.get_z());
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(get_x(), get_y(), get_z());
+    /**
+     * Checks whether the different between the points is [almost] zero
+     * @param point
+     * @return true if the different between the points is zero or almost zero, false otherwise
+     */
+    public  boolean isAlmostEquals(Point3D point) {
+
+        return  (Util.isZero(this._x.get()-point._x.get())) &&
+                (Util.isZero(this._y.get()-point._y.get())) &&
+                (Util.isZero(this._z.get()-point._z.get()));
     }
 }

@@ -1,17 +1,14 @@
 package renderer;
 
 import elements.*;
-import geometries.Intersectable;
 import primitives.*;
 import scene.Scene;
 import java.awt.Color;
 import java.util.LinkedList;
 import java.util.List;
-
-
 import geometries.Intersectable.GeoPoint;
-
 import static primitives.Util.*;
+
 
 /**
  * Render class
@@ -25,7 +22,8 @@ public class Render {
     /**
      * MAX_CALC_COLOR_LEVEL - maximum level in the recursion three
      */
-    private static final int MAX_CALC_COLOR_LEVEL = 10;
+    private static final int MAX_CALC_COLOR_LEVEL = 5;
+
     /**
      * MIN_CALC_COLOR_K - stopping calculate color at this value of k
      */
@@ -35,6 +33,7 @@ public class Render {
      * _threads - num of threads
      */
     private int _threads = 6;
+
     /**
      * _print - print percent for debug
      */
@@ -42,18 +41,20 @@ public class Render {
 
     /**
      * numOfRaysForSuperSampling - number of rays for super sampling
+     * AdaptiveSuperSamplingFlag - Flag to choose whether to apply the Adaptive Super Sampling
      */
-    private int maxRaysForSuperSampling = 16;
+    private int maxRaysForSuperSampling = 200;
     private boolean AdaptiveSuperSamplingFlag = true;
 
     /**
      * Multiple reflection and refraction rays
      * distanceOfGrid - the distance between the object and the grid for reflection and refraction
      * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
+     * AdaptiveDiffusedAndGlossy - Flag to choose whether to apply the Adaptive Diffused And Glossy
      */
     private double distanceForDiffusedAndGlossy = 100;
-    private int numOfRaysForDiffusedAndGlossy = 16;
-    private boolean AdaptiveDiffusedAndGlossy = true;
+    private int maxRaysForDiffusedAndGlossy = 200;
+    private boolean AdaptiveDiffusedAndGlossyFlag = true;
 
 
 
@@ -96,15 +97,15 @@ public class Render {
          * Pixel - nextPixel
          * return true if there is a next pixel
          */
-        public boolean nextPixel(Pixel target) throws InterruptedException {
+        public boolean nextPixel(Pixel target) {
             int percent = nextp(target);
             if(percent > 0 && Render.this._print) {
-                synchronized(System.out){System.out.printf("\r %02d%%", percent);};
+                synchronized(System.out){System.out.printf("\r %02d%%", percent);}
             }
             if(percent >= 0)
                 return true;
             if(Render.this._print){
-                synchronized(System.out){System.out.printf("\r %02d%%", 100);};
+                synchronized(System.out){System.out.printf("\r %02d%%", 100);}
         }
             return false;
         }
@@ -114,8 +115,7 @@ public class Render {
          * changing target pixel to the next pixel
          * return 0 if there is a next pixel, and -1 else
          */
-        private synchronized int nextp(Pixel target)
-        {
+        private synchronized int nextp(Pixel target) {
             col++;
             _counter++;
             if(col < _maxCols) {
@@ -173,8 +173,6 @@ public class Render {
      */
     public void renderImage() throws Exception{
         Camera camera = scene.get_camera();
-        Intersectable geometries = scene.get_geometries();
-        Color background = scene.get_background().getColor();
         double distance = scene.get_distance();
         int nX = imageWriter.getNx();
         int nY = imageWriter.getNy();
@@ -223,7 +221,7 @@ public class Render {
         //finish to create the image
         if(_print)
             System.out.print("\r100%\n");
-        System.out.print(counter / (nX * nY));
+        //System.out.print(counter / (nX * nY));
 
 
     }
@@ -241,11 +239,43 @@ public class Render {
     }
 
     /**
-     * numOfRays - setNumOfRays
-     * set the number of rays in each pixel
+     * set Max Rays For Super Sampling
+     * the maximum rays for Super Sampling
      */
     public void setMaxRaysForSuperSampling(int maxRaysForSuperSampling) {
         this.maxRaysForSuperSampling = maxRaysForSuperSampling;
+    }
+
+    /**
+     * set Max Rays For Diffused And Glossy
+     * the maximum rays for reflection and refraction
+     */
+    public void setMaxRaysForDiffusedAndGlossy(int maxRaysForDiffusedAndGlossy) {
+        this.maxRaysForDiffusedAndGlossy = maxRaysForDiffusedAndGlossy;
+    }
+
+    /**
+     * set Adaptive Diffused And Glossy Flag
+     * Flag to choose whether to apply the Adaptive Diffused And Glossy
+     */
+    public void setAdaptiveDiffusedAndGlossyFlag(boolean adaptiveDiffusedAndGlossyFlag) {
+        AdaptiveDiffusedAndGlossyFlag = adaptiveDiffusedAndGlossyFlag;
+    }
+
+    /**
+     * set Adaptive Super Sampling Flag
+     * Flag to choose whether to apply the Adaptive Super Sampling
+     */
+    public void setAdaptiveSuperSamplingFlag(boolean adaptiveSuperSamplingFlag) {
+        AdaptiveSuperSamplingFlag = adaptiveSuperSamplingFlag;
+    }
+
+    /**
+     * set distance of grid
+     * set the distance between the object and the grid for reflection and refraction
+     */
+    public void setDistanceForDiffusedAndGlossy(double distanceForDiffusedAndGlossy) {
+        this.distanceForDiffusedAndGlossy = distanceForDiffusedAndGlossy;
     }
 
     /**
@@ -287,11 +317,10 @@ public class Render {
             Vector v = p.point.subtract(scene.get_camera().getLocation()).normalize();
             Vector n = p.geometry.getNormal(p.point);
             double nv = alignZero(n.dotProduct(v));
-            //if n is orthogonal to v
-            if(nv == 0)
+            if(nv == 0)//if n is orthogonal to v
                 return color;
             Material material = p.geometry.get_material();
-            int nShininess = material.get_nShininess();
+            int nShininess = material.get_nShininess();// level of shininess
             double kd = material.get_kD();// level of diffusive
             double ks = material.get_kS();// level of specular
             for (LightSource lightSource : scene.get_lights()){
@@ -300,7 +329,7 @@ public class Render {
                 if(nl*nv>0)//if the camera can see
                 {
                     double ktr = transparency(l, n, p, lightSource);// level of shadow
-                    primitives.Color ip =lightSource.getIntensity(p.point).scale(ktr);
+                    primitives.Color ip = lightSource.getIntensity(p.point).scale(ktr);
                     color = color.add(calcDiffusive(kd, nl, ip), calcSpecular(ks, l, n, nl, v, nShininess, ip));
                 }
             }
@@ -309,11 +338,13 @@ public class Render {
             double kr = material.get_KR();
             double kkr = k*kr;
             if(kkr > MIN_CALC_COLOR_K) {
-                if(AdaptiveDiffusedAndGlossy)
+                if(AdaptiveDiffusedAndGlossyFlag)//if adaptive Diffused And Glossy is on
                 {
+                    // calc the reflected vector
                     double nv1 = ray.get_vector().dotProduct(n);
                     Vector v1 = ray.get_vector();
                     Vector ref = v1.add(n.scale(-2*nv1));
+                    //calc the color
                     color = color.add(AdaptiveDiffusedAndGlossy(n,p.point,ref,-1, material.get_DiffusedAndGlossy(),level,kkr,kr).scale(kr));
                 }
                 else
@@ -331,11 +362,11 @@ public class Render {
 
             }
 
-            //transparency calculate
+            //refracted calculate
             double kt = material.get_KT();
             double kkt = k*kt;
             if(kkt > MIN_CALC_COLOR_K) {
-                if(AdaptiveDiffusedAndGlossy)
+                if(AdaptiveDiffusedAndGlossyFlag)//if adaptive Diffused And Glossy is on
                     {
                     color = color.add(AdaptiveDiffusedAndGlossy(n,p.point,ray.get_vector(),1, material.get_DiffusedAndGlossy(),level,kkt,kt).scale(kt));
                     }
@@ -389,6 +420,11 @@ public class Render {
         return color.reduce(rays.size());
     }
 
+    /**
+     * calcColor - return the  color for ray
+     * @param ray ray throw pixel
+     * @return the color in the point
+     */
     private primitives.Color calcColor(Ray ray) throws Exception {
         GeoPoint gp;
             gp = findClosestIntersection(ray);
@@ -430,49 +466,10 @@ public class Render {
      * @param ip the light intensity at the point
      * @return diffusive component in the point
      */
-    private primitives.Color calcDiffusive(double kd, double nl, primitives.Color ip)
-    {
+    private primitives.Color calcDiffusive(double kd, double nl, primitives.Color ip) {
         if(nl < 0)
             nl = -nl;
         return ip.scale(nl * kd);
-    }
-
-    /**
-     * getClosestPoint - calculate the closest intersection point
-     * @param points list of Point3D intersection point's
-     * @return the closest intersection point
-     */
-    private GeoPoint getClosestPoint(List<GeoPoint> points){
-        if(points == null)
-            return null;
-        Point3D locationOfCamera = scene.get_camera().getLocation();
-        GeoPoint closestPoint = points.get(0);
-        for(int i = 1; i < points.size(); i++)
-        {
-            if(points.get(i).point.distance(locationOfCamera) < closestPoint.point.distance(locationOfCamera))
-                closestPoint = points.get(i);
-        }
-        return closestPoint;
-    }
-
-    /**
-     * unshaded - check if an intersection point need to be shadow or not
-     * @param l direction from light to point
-     * @param n normal to the point
-     * @param gp the point we check for shadow
-     * @param lightSource the light source
-     * @return true if its an intersection point need to be unshaded
-     */
-    private boolean unshaded(Vector l, Vector n, GeoPoint gp, LightSource lightSource){
-        try {
-            Vector fromPointToLightVector = l.scale(-1);
-            Ray fromPointToLightRay = new Ray(gp.point, fromPointToLightVector, n);
-            List<GeoPoint> intersection = scene.get_geometries().findIntersections(fromPointToLightRay, lightSource.getDistance(gp.point));
-            return intersection==null || intersection.size() == 0;
-        }
-        catch (Exception e){
-            return true;
-        }
     }
 
     /**
@@ -511,8 +508,7 @@ public class Render {
      * @param point, the intersection point
      * @param ray, the ray we wants his reflected ray
      */
-    private List<Ray> constructReflectedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception
-    {
+    private List<Ray> constructReflectedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception {
         double nv = ray.get_vector().dotProduct(n);
         Vector v = ray.get_vector();
         Vector ref = v.add(n.scale(-2*nv));
@@ -525,8 +521,7 @@ public class Render {
      * @param point, the intersection point
      * @param ray, the ray we wants his refracted ray
      */
-    private List<Ray> constructRefractedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception
-    {
+    private List<Ray> constructRefractedRays(Vector n, Point3D point, Ray ray, double DiffusedAndGlossy) throws Exception {
         return RaysOfGrid(n, point,ray.get_vector(), 1, DiffusedAndGlossy);
     }
 
@@ -541,18 +536,14 @@ public class Render {
     private List<Ray> RaysOfGrid(Vector n, Point3D point, Vector Vto, int direction, double DiffusedAndGlossy) throws Exception {
         if(direction != 1 && direction != -1)
             throw new IllegalArgumentException("direction must be 1 or -1");
-        double gridSize = DiffusedAndGlossy;
-        int numOfRowCol = isZero(gridSize)? 1: (int)Math.ceil(Math.sqrt(numOfRaysForDiffusedAndGlossy));
+        int numOfRowCol = isZero(DiffusedAndGlossy)? 1: (int)Math.ceil(Math.sqrt(maxRaysForDiffusedAndGlossy));
         Vector Vup = Vto.findRandomOrthogonal();//vector in the grid
         Vector Vright = Vto.crossProduct(Vup);//vector in the grid
         Point3D centerOfGrid = point.add(Vto.scale(distanceForDiffusedAndGlossy)); // center point of the grid
-        double sizeOfCube = gridSize/numOfRowCol;//size of each cube in the grid
-        List rays = new LinkedList<Ray>();
+        double sizeOfCube = DiffusedAndGlossy/numOfRowCol;//size of each cube in the grid
+        List<Ray> rays = new LinkedList();
         n = n.dotProduct(Vto) > 0 ? n.scale(-direction) : n.scale(direction);//fix the normal direction
         Point3D tempcenterOfGrid = centerOfGrid;//save the center of the grid
-
-
-
         Vector tempRayVector;
         for (int row = 0; row < numOfRowCol; row++){
             double xAsixChange= (row - (numOfRowCol/2d))*sizeOfCube + sizeOfCube/2d;
@@ -590,24 +581,6 @@ public class Render {
         return closestPoint;
     }
 
-    /**
-     * set distance of grid
-     * set the distance between the object and the grid for reflection and refraction
-     */
-    public void setDistanceForDiffusedAndGlossy(double distanceForDiffusedAndGlossy) {
-        this.distanceForDiffusedAndGlossy = distanceForDiffusedAndGlossy;
-    }
-
-    /**
-     * set num of rays
-     * set the number of rays for reflection and refraction
-     */
-    public void setNumOfRaysForDiffusedAndGlossy(int numOfRaysForDiffusedAndGlossy) {
-        this.numOfRaysForDiffusedAndGlossy = numOfRaysForDiffusedAndGlossy;
-    }
-
-
-
     public primitives.Color AdaptiveSuperSampling(int nX, int nY, int j, int i, double screenDistance, double screenWidth, double screenHeight, int numOfRays) throws Exception {
         Camera camera = scene.get_camera();
         Vector Vright = camera.getVright();
@@ -633,11 +606,10 @@ public class Render {
         return AdaptiveSuperSamplingRec(Pij, Rx, Ry, PRx, PRy,cameraLoc,Vright, Vup,null);
     }
 
-private double counter = 0;
     private primitives.Color AdaptiveSuperSamplingRec(Point3D centerP, double Width, double Height, double minWidth, double minHeight, Point3D cameraLoc,Vector Vright,Vector Vup, List<Point3D> prePoints) throws Exception {
-        List<Point3D> nextCenterPList = new LinkedList<Point3D>();
-        List<Point3D> cornersList = new LinkedList<Point3D>();
-        List<primitives.Color> colorList = new LinkedList<primitives.Color>();
+        List<Point3D> nextCenterPList = new LinkedList<>();
+        List<Point3D> cornersList = new LinkedList<>();
+        List<primitives.Color> colorList = new LinkedList<>();
         Point3D tempCorner;
         Ray tempRay;
         for (int i = -1; i <= 1; i += 2){
@@ -646,7 +618,6 @@ private double counter = 0;
                 cornersList.add(tempCorner);
                 if (prePoints == null || !isInList(prePoints, tempCorner)) {
                     tempRay = new Ray(cameraLoc, tempCorner.subtract(cameraLoc));
-                    counter++;
                     nextCenterPList.add(centerP.add(Vright.scale(i * Width / 4)).add(Vup.scale(j * Height / 4)));
                     colorList.add(calcColor(tempRay));
                     }
@@ -670,7 +641,7 @@ private double counter = 0;
         boolean isAllEquals = true;
         primitives.Color tempColor = colorList.get(0);
         for (primitives.Color color : colorList) {
-            if (!isAlmostEquals(tempColor, color))
+            if (!tempColor.isAlmostEquals(color))
                 isAllEquals = false;
         }
         if (isAllEquals && colorList.size() > 1)
@@ -686,22 +657,16 @@ private double counter = 0;
 
     }
 
-    public void setAdaptiveSuperSamplingFlag(boolean adaptiveSuperSamplingFlag) {
-        AdaptiveSuperSamplingFlag = adaptiveSuperSamplingFlag;
-    }
-
-
     private primitives.Color AdaptiveDiffusedAndGlossy(Vector n, Point3D point, Vector Vto, int direction, double DiffusedAndGlossy, int level , double k, double ktr) throws Exception {
-       try {
+
            if (direction != 1 && direction != -1)
                throw new IllegalArgumentException("direction must be 1 or -1");
            double gridSize = DiffusedAndGlossy;
-           int numOfRowCol = isZero(gridSize) ? 1 : (int) Math.floor(Math.sqrt(numOfRaysForDiffusedAndGlossy));
+           int numOfRowCol = isZero(gridSize) ? 1 : (int) Math.floor(Math.sqrt(maxRaysForDiffusedAndGlossy));
            Vector Vup = Vto.findRandomOrthogonal();//vector in the grid
            Vector Vright = Vto.crossProduct(Vup);//vector in the grid
            Point3D centerOfGrid = point.add(Vto.scale(distanceForDiffusedAndGlossy)); // center point of the grid
            double sizeOfCube = gridSize / numOfRowCol;//size of each cube in the grid
-           List rays = new LinkedList<Ray>();
            n = n.dotProduct(Vto) > 0 ? n.scale(-direction) : n.scale(direction);//fix the normal direction
 
            if(isZero(gridSize))
@@ -715,23 +680,9 @@ private double counter = 0;
 
            }
 
-
            return AdaptiveDiffusedAndGlossyRec(centerOfGrid, gridSize, sizeOfCube, point, Vright, Vup, n, direction, level, k, ktr, null);
-       }
-       catch (Exception e)
-       {
-           return null;
-       }
     }
-    private boolean isInList(List<Point3D> pointslist, Point3D point)
-    {
-        for (Point3D point1 : pointslist) {
-            if(isZero(point.get_x().get() - point1.get_x().get()) && isZero(point.get_y().get() - point1.get_y().get())
-                    && isZero(point.get_z().get() - point1.get_z().get()))
-                return true;
-        }
-        return false;
-    }
+
     private primitives.Color AdaptiveDiffusedAndGlossyRec(Point3D centerP, double WidthAndHeight, double minCubeSize, Point3D pIntersection,Vector Vright,Vector Vup , Vector normal, int direction, int level , double k, double ktr, List<Point3D> prePoints) throws Exception {
         List<Point3D> nextCenterPList = new LinkedList<Point3D>();
         List<Point3D> cornersList = new LinkedList<Point3D>();
@@ -774,7 +725,7 @@ private double counter = 0;
         boolean isAllEquals = true;
         primitives.Color tempColor = colorList.get(0);
         for (primitives.Color color : colorList) {
-            if (!isAlmostEquals(tempColor, color))
+            if (!tempColor.isAlmostEquals(color))
                 isAllEquals = false;
         }
         if (isAllEquals && colorList.size() > 1)
@@ -788,8 +739,18 @@ private double counter = 0;
         return tempColor.reduce(nextCenterPList.size());
     }
 
-    public void setAdaptiveDiffusedAndGlossy(boolean adaptiveDiffusedAndGlossy) {
-        AdaptiveDiffusedAndGlossy = adaptiveDiffusedAndGlossy;
+    /**
+     * is In List - Checks whether a point is in a points list
+     * @param point the point we want to check
+     * @param pointsList where we search the point
+     * @return true if the point is in the list, false otherwise
+     */
+    private boolean isInList(List<Point3D> pointsList, Point3D point) {
+        for (Point3D tempPoint : pointsList) {
+            if(point.isAlmostEquals(tempPoint))
+                return true;
+        }
+        return false;
     }
 
 }

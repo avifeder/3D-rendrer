@@ -18,6 +18,8 @@ public class Scene {
     Camera _camera;
     double _distance;
     List<LightSource> _lights;
+
+
     public Scene(String _name) {
         this._name = _name;
         _geometries = new Geometries();

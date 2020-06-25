@@ -173,7 +173,7 @@ public class ReflectionRefractionTests {
                 new SpotLight(new Color(1020, 400, 400),  new Point3D(-800, 100, -300), new Vector(-1, 1, 4), 1, 0.00001, 0.000005),
                 new DirectionalLight(new Color(java.awt.Color.darkGray),   new Vector(-0.5, 0.5, 0))
                 );
-        ImageWriter imageWriter = new ImageWriter("our test", 2500, 2500, 1000, 1000);
+        ImageWriter imageWriter = new ImageWriter("test", 2500, 2500, 1000, 1000);
         Render render = new Render(imageWriter, scene);
         render.setDistanceForDiffusedAndGlossy(5000);
         render.renderImage();

@@ -184,4 +184,17 @@ public class Color {
         return new Color(r, g, b);
     }
 
+    /**
+     * Checks whether the different between the colors is [almost] zero
+     * @param color
+     * @return true if the different between the colors is zero or almost zero, false otherwise
+     */
+
+    public  boolean isAlmostEquals(primitives.Color color) {
+
+        return  (Math.abs(this._r-color._r)<= 2) &&
+                (Math.abs(this._b-color._b)<= 2) &&
+                (Math.abs(this._g-color._g)<= 2);
+    }
+
 }

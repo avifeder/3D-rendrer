@@ -24,7 +24,6 @@ public abstract class Util {
 
     /**
      * Checks whether the number is [almost] zero
-     *
      * @param number
      * @return true if the number is zero or almost zero, false otherwise
      */
@@ -34,7 +33,6 @@ public abstract class Util {
 
     /**
      * Aligns the number to zero if it is almost zero
-     *
      * @param number
      * @return 0.0 if the number is very close to zero, the number itself otherwise
      */
@@ -42,11 +40,5 @@ public abstract class Util {
         return getExp(number) < ACCURACY ? 0.0 : number;
     }
 
-    public static boolean isAlmostEquals(primitives.Color color1, primitives.Color color2)
-    {
 
-        return  (Math.abs(color1.get_r()-color2.get_r())<= 2) &&
-                (Math.abs(color1.get_b()-color2.get_b())<= 2) &&
-                (Math.abs(color1.get_g()-color2.get_g())<= 2);
-    }
 }
