@@ -47,7 +47,6 @@ public class Render {
     private boolean AdaptiveSuperSamplingFlag = true;
 
     /**
-     *
      * Multiple reflection and refraction rays
      * distanceOfGrid - the distance between the object and the grid for reflection and refraction
      * numOfRaysForDiffusedAndGlossy - number of rays for reflection and refraction
