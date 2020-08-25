@@ -43,7 +43,7 @@ public class Render {
      * numOfRaysForSuperSampling - number of rays for super sampling
      * AdaptiveSuperSamplingFlag - Flag to choose whether to apply the Adaptive Super Sampling
      */
-    private int maxRaysForSuperSampling = 200;
+    private int maxRaysForSuperSampling = 1;
     private boolean AdaptiveSuperSamplingFlag = true;
 
     /**
@@ -53,7 +53,7 @@ public class Render {
      * AdaptiveDiffusedAndGlossy - Flag to choose whether to apply the Adaptive Diffused And Glossy
      */
     private double distanceForDiffusedAndGlossy = 100;
-    private int maxRaysForDiffusedAndGlossy = 200;
+    private int maxRaysForDiffusedAndGlossy = 1;
     private boolean AdaptiveDiffusedAndGlossyFlag = true;
 
 
@@ -221,9 +221,6 @@ public class Render {
         //finish to create the image
         if(_print)
             System.out.print("\r100%\n");
-        //System.out.print(counter / (nX * nY));
-
-
     }
 
     /**
@@ -581,7 +578,19 @@ public class Render {
         return closestPoint;
     }
 
-    public primitives.Color AdaptiveSuperSampling(int nX, int nY, int j, int i, double screenDistance, double screenWidth, double screenHeight, int numOfRays) throws Exception {
+    /**
+     * Adaptive Super Sampling
+     *@param nX number of pixels in x axis
+     *@param nY number of pixels in y axis
+     *@param j number of pixels in x axis
+     *@param i number of pixels in x axis
+     *@param screenDistance the distance between the camera and the screen
+     *@param screenWidth the screen width
+     *@param screenHeight the screen height
+     *@param numOfRays max numof ray for pixel
+     *@return color for pixel
+     */
+    private primitives.Color AdaptiveSuperSampling(int nX, int nY, int j, int i, double screenDistance, double screenWidth, double screenHeight, int numOfRays) throws Exception {
         Camera camera = scene.get_camera();
         Vector Vright = camera.getVright();
         Vector Vup = camera.getVup();
@@ -606,7 +615,25 @@ public class Render {
         return AdaptiveSuperSamplingRec(Pij, Rx, Ry, PRx, PRy,cameraLoc,Vright, Vup,null);
     }
 
+    /**
+     * Adaptive Super Sampling recursive
+     *@param centerP the screen location
+     *@param Width the screen width
+     *@param Height the screen height
+     *@param minWidth the min cube width
+     *@param minHeight the min cube height
+     *@param cameraLoc the camera location to calc rays
+     *@param Vright vector vRight of the screen
+     *@param Vup vector vUp of the screen
+     *@param prePoints list of pre points to
+     *@return color for pixel
+     */
     private primitives.Color AdaptiveSuperSamplingRec(Point3D centerP, double Width, double Height, double minWidth, double minHeight, Point3D cameraLoc,Vector Vright,Vector Vup, List<Point3D> prePoints) throws Exception {
+
+        if (Width < minWidth * 2 || Height < minHeight * 2) {
+            return calcColor(new Ray(cameraLoc, centerP.subtract(cameraLoc)));
+        }
+
         List<Point3D> nextCenterPList = new LinkedList<>();
         List<Point3D> cornersList = new LinkedList<>();
         List<primitives.Color> colorList = new LinkedList<>();
@@ -629,15 +656,6 @@ public class Render {
         }
 
 
-        if (Width < minWidth * 2 || Height < minHeight * 2) {
-            primitives.Color sumColor = primitives.Color.BLACK;
-            for (primitives.Color color : colorList) {
-                sumColor = sumColor.add(color);
-            }
-            return sumColor.reduce(colorList.size());
-        }
-
-
         boolean isAllEquals = true;
         primitives.Color tempColor = colorList.get(0);
         for (primitives.Color color : colorList) {
@@ -657,6 +675,18 @@ public class Render {
 
     }
 
+    /**
+     *Adaptive Diffused And Glossy
+     *@param n normal vector
+     *@param point the intersection point
+     *@param Vto the light direction
+     *@param direction Diffused or Glossy
+     *@param DiffusedAndGlossy the grid size
+     *@param level the recursive level for calcColor
+     *@param k min ktr
+     *@param ktr the kt or thr kr of the geometry
+     *@return color for intersection point
+     */
     private primitives.Color AdaptiveDiffusedAndGlossy(Vector n, Point3D point, Vector Vto, int direction, double DiffusedAndGlossy, int level , double k, double ktr) throws Exception {
 
            if (direction != 1 && direction != -1)
@@ -683,6 +713,21 @@ public class Render {
            return AdaptiveDiffusedAndGlossyRec(centerOfGrid, gridSize, sizeOfCube, point, Vright, Vup, n, direction, level, k, ktr, null);
     }
 
+    /**
+     *Adaptive Diffused And Glossy
+     *@param centerP the center point of grid
+     *@param WidthAndHeight the screen width and height
+     *@param minCubeSize the min cube size
+     *@param pIntersection the intersection point
+     *@param Vright a random orthogonal vector to Vup
+     *@param Vup an orthogonal vector to Vup and Vright
+     *@param normal normal vector
+     *@param direction Diffused or Glossy
+     *@param level the recursive level for calcColor
+     *@param k min ktr
+     *@param ktr the kt or thr kr of the geometry
+     *@return color for intersection point
+     */
     private primitives.Color AdaptiveDiffusedAndGlossyRec(Point3D centerP, double WidthAndHeight, double minCubeSize, Point3D pIntersection,Vector Vright,Vector Vup , Vector normal, int direction, int level , double k, double ktr, List<Point3D> prePoints) throws Exception {
         List<Point3D> nextCenterPList = new LinkedList<Point3D>();
         List<Point3D> cornersList = new LinkedList<Point3D>();

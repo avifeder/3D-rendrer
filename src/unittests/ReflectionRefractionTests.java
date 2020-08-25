@@ -143,10 +143,10 @@ public class ReflectionRefractionTests {
     }
 
     /**
-     * bonus with 10 shapes
+     * test multi shapes
      */
     @Test
-    public void bonusMultiShapes()throws Exception {
+    public void test()throws Exception {
         Scene scene = new Scene("Test scene");
         scene.set_camera(new Camera(new Point3D(50, 100, -11000), new Vector(0, 0, 1), new Vector(0, -1, 0)));
         scene.set_distance(9000);
@@ -173,9 +173,14 @@ public class ReflectionRefractionTests {
                 new SpotLight(new Color(1020, 400, 400),  new Point3D(-800, 100, -300), new Vector(-1, 1, 4), 1, 0.00001, 0.000005),
                 new DirectionalLight(new Color(java.awt.Color.darkGray),   new Vector(-0.5, 0.5, 0))
                 );
-        ImageWriter imageWriter = new ImageWriter("test", 2500, 2500, 1000, 1000);
+        ImageWriter imageWriter = new ImageWriter("test", 2500, 2500, 500, 500);
         Render render = new Render(imageWriter, scene);
         render.setDistanceForDiffusedAndGlossy(5000);
+        render.setAdaptiveDiffusedAndGlossyFlag(true);
+        render.setMaxRaysForDiffusedAndGlossy(1);
+        render.setMultiThreading(5);
+        render.setAdaptiveSuperSamplingFlag(true);
+        render.setMaxRaysForSuperSampling(1);
         render.renderImage();
         render.writeToImage();
     }
@@ -192,7 +197,7 @@ public class ReflectionRefractionTests {
                 new Sphere(new Color(0, 25, 51),  new Material(0.8, 0.8, 200,0,0.7), 200, new Point3D(-1000, -50, 1600)),
                 new Sphere(new Color(0, 25, 51), new Material(0.8, 0.8, 200,0,0.7), 200, new Point3D(1000, -50, 1600)),
                 new Sphere(new Color (0, 25, 51), new Material(0.8, 0.8, 200,0,0.7), 200, new Point3D(0, -50, 1600)),
-                new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0,0.00000001), new Point3D(40, -15, -8200),new Point3D(350, -15, -8200),new Point3D(350, 185, -8200)),
+                new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0,0), new Point3D(40, -15, -8200),new Point3D(350, -15, -8200),new Point3D(350, 185, -8200)),
                 new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0,15), new Point3D(40, -15, -8200),new Point3D(350, 185, -8200),new Point3D(-270, 185, -8200)),
                 new Triangle(new Color (java.awt.Color.WHITE).reduce(10), new Material(0, 0, 0,1,0, 30), new Point3D(40, -15, -8200),new Point3D(-270, -15, -8200),new Point3D(-270, 185, -8200)),
 

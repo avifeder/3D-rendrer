@@ -77,10 +77,7 @@ public class Ray {
                 Objects.equals(get_vector(), ray.get_vector());
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(get_point(), get_vector());
-    }
+
     public Point3D getPoint(double t) throws Exception
     {
         if(isZero(t))

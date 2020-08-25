@@ -174,10 +174,7 @@ public class Vector {
         return Objects.equals(getPoint(), vector.getPoint());
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getPoint());
-    }
+
     public boolean isParallel(Vector vector2)
     {
         Coordinate x = new Coordinate(_point.get_y().get() * vector2._point.get_z().get() - _point.get_z().get() * vector2._point.get_y().get());
