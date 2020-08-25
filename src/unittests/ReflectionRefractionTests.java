@@ -177,10 +177,10 @@ public class ReflectionRefractionTests {
         Render render = new Render(imageWriter, scene);
         render.setDistanceForDiffusedAndGlossy(5000);
         render.setAdaptiveDiffusedAndGlossyFlag(true);
-        render.setMaxRaysForDiffusedAndGlossy(36);
+        render.setMaxRaysForDiffusedAndGlossy(500);
         render.setMultiThreading(5);
         render.setAdaptiveSuperSamplingFlag(true);
-        render.setMaxRaysForSuperSampling(36);
+        render.setMaxRaysForSuperSampling(500);
         render.renderImage();
         render.writeToImage();
     }
