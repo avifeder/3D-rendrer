@@ -43,7 +43,7 @@ public class Render {
      * numOfRaysForSuperSampling - number of rays for super sampling
      * AdaptiveSuperSamplingFlag - Flag to choose whether to apply the Adaptive Super Sampling
      */
-    private int maxRaysForSuperSampling = 1;
+    private int maxRaysForSuperSampling = 36;
     private boolean AdaptiveSuperSamplingFlag = true;
 
     /**
@@ -53,7 +53,7 @@ public class Render {
      * AdaptiveDiffusedAndGlossy - Flag to choose whether to apply the Adaptive Diffused And Glossy
      */
     private double distanceForDiffusedAndGlossy = 100;
-    private int maxRaysForDiffusedAndGlossy = 1;
+    private int maxRaysForDiffusedAndGlossy = 36;
     private boolean AdaptiveDiffusedAndGlossyFlag = true;
 
 
