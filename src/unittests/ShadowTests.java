@@ -34,7 +34,7 @@ public class ShadowTests {
         scene.addLights(new SpotLight(new Color(400, 240, 0), //
                 new Point3D(-100, 100, -200), new Vector(1, -1, 3), 1, 1E-5, 1.5E-7));
 
-        ImageWriter imageWriter = new ImageWriter("sphereTriangleInitial", 200, 200, 1600, 1600);
+        ImageWriter imageWriter = new ImageWriter("sphereTriangleInitial", 200, 200, 2000, 2000);
         Render render = new Render(imageWriter, scene);
 
         render.renderImage();
@@ -166,7 +166,7 @@ public class ShadowTests {
         scene.addLights(new SpotLight(new Color(700, 400, 400), //
                 new Point3D(40, -40, -115), new Vector(-1, 1, 4), 1, 4E-4, 2E-5));
 
-        ImageWriter imageWriter = new ImageWriter("trianglesSphere", 200, 200, 600, 600);
+        ImageWriter imageWriter = new ImageWriter("trianglesSphere", 200, 200, 1000, 600);
         Render render = new Render(imageWriter, scene);
 
         render.renderImage();
